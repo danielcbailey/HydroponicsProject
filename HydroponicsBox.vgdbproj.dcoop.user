@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<VisualGDBUserPreferences xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<VisualGDBUserPreferences xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <UserDefinedVariableValues />
   <DebugPreferences xsi:type="com.visualgdb.debug.embedded.preferences">
     <CatchpointConfiguration>
@@ -11,7 +11,11 @@
     </CatchpointConfiguration>
     <MaskInterruptsWhileStepping>false</MaskInterruptsWhileStepping>
     <MemoryWindowPreferences />
-    <LiveVariables />
+    <e />
+    <c>
+      <b>AllGlobals</b>
+      <a>false</a>
+    </c>
     <Suggestions>
       <HardwareRegisterFilters />
     </Suggestions>
@@ -6523,9 +6527,11 @@
       <Globals>
         <SinglePIOPreferences>
           <ShowFavoritesOnly>false</ShowFavoritesOnly>
+          <StateMachineHandling>Run</StateMachineHandling>
         </SinglePIOPreferences>
         <SinglePIOPreferences>
           <ShowFavoritesOnly>false</ShowFavoritesOnly>
+          <StateMachineHandling>Run</StateMachineHandling>
         </SinglePIOPreferences>
       </Globals>
     </PIO>
