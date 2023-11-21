@@ -9,6 +9,9 @@
 #include "menus/splashPage.h"
 #include "inputs.h"
 #include "sensors.h"
+#include "menus/Menus.h"
+
+SplashPage* _splashPage;
 
 void blankFunc()
 {
@@ -44,8 +47,11 @@ int main() {
 	GraphicLCD::locate(0, 0);
 	GraphicLCD::print((char*)"ERROR INTIALIZING");
 	
+	_splashPage = new SplashPage();
+	
 	init_inputs();
-	_displayManager = new DisplayManager(new SplashPage);
+	initializeMainMenu();
+	_displayManager = new DisplayManager(_splashPage);
 	
 	uint64_t t = 0;
 	while (true)

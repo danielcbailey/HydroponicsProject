@@ -10,9 +10,13 @@ private:
 	void renderDisplay();
 	
 public:
+	inline ~SplashPage() {};
+	
 	void onConstruction();
 	
 	void onDestruction();
 	
 	void onUpdate(float dt);
 };
+
+extern SplashPage* _splashPage;

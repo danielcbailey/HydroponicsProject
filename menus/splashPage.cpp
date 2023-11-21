@@ -4,9 +4,11 @@
 #include "DisplayManager.h"
 #include "graphicLCD.h"
 #include "sensors.h"
+#include "Menus.h"
 
 void SplashPage::onConstruction()
 {
+	GraphicLCD::clear();
 	setButtonCallback(std::bind(&SplashPage::handleButton, this));
 	this->renderDisplay();
 }
@@ -23,7 +25,8 @@ void SplashPage::onUpdate(float dt)
 
 void SplashPage::handleButton()
 {
-	
+	// transition to the options menu
+	switchToMainMenu();
 }
 
 void SplashPage::renderDisplay()

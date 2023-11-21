@@ -3,9 +3,32 @@
 #include "inputs.h"
 #include <functional>
 
+Menu::Menu(std::string title, MenuItem* items, int numItems)
+{
+	this->title = title;
+	this->items = items;
+	this->numItems = numItems;
+	this->extraText = "";
+	this->selection = 0;
+	this->renderedSelection = 0;
+	this->renderedRow = 0;
+}
+	
+Menu::Menu(std::string title, MenuItem items[], int numItems, std::string extraText)
+{
+	this->title = title;
+	this->items = items;
+	this->numItems = numItems;
+	this->extraText = extraText;
+	this->selection = 0;
+	this->renderedSelection = 0;
+	this->renderedRow = 0;
+}
+
 void Menu::onConstruction()
 {
 	//Setting up on the screen
+	GraphicLCD::clear();
 	this->renderDisplay();
 	setButtonCallback(std::bind(&Menu::handleButton, this));
 }

@@ -12,8 +12,18 @@
     <MaskInterruptsWhileStepping>false</MaskInterruptsWhileStepping>
     <MemoryWindowPreferences />
     <e />
+    <b>
+      <a>
+        <a>com.sysprogs.AllGlobals</a>
+        <b />
+      </a>
+      <a>
+        <a>com.sysprogs.SpecificVariables</a>
+        <b />
+      </a>
+    </b>
     <c>
-      <b>AllGlobals</b>
+      <b>SpecificVariables</b>
       <a>false</a>
     </c>
     <Suggestions>

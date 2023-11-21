@@ -18,7 +18,8 @@ add_executable(HydroponicsBox
         menus/splashPage.cpp
         sensors.cpp
         ${PICO_SDK_PATH}/src/rp2_common/hardware_i2c/i2c.c
-        communication.cpp)
+        communication.cpp
+        menus/MainMenu.cpp)
 
 pico_generate_pio_header(HydroponicsBox ${CMAKE_CURRENT_LIST_DIR}/rotaryEncoder.pio)
 target_include_directories(HydroponicsBox PRIVATE . ${PICO_SDK_PATH}/src/rp2_common/hardware_pio/include menu ${PICO_SDK_PATH}/src/rp2_common/hardware_i2c/include)

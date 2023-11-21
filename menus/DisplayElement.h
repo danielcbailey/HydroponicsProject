@@ -3,6 +3,8 @@
 class DisplayElement
 {
 public:
+	virtual ~DisplayElement() {};
+	
 	//Pure virtual member functions to make this into an interface
 	virtual void onConstruction() = 0;
 	

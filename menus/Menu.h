@@ -35,28 +35,11 @@ private:
 	void handleButton();
 	
 public:
+	inline ~Menu() {};
 	
-	inline Menu(std::string title, MenuItem items[], int numItems)
-	{
-		this->title = title;
-		this->items = items;
-		this->numItems = numItems;
-		this->extraText = "";
-		this->selection = 0;
-		this->renderedSelection = 0;
-		this->renderedRow = 0;
-	}
+	Menu(std::string title, MenuItem* items, int numItems);
 	
-	inline Menu(std::string title, MenuItem items[], int numItems, std::string extraText)
-	{
-		this->title = title;
-		this->items = items;
-		this->numItems = numItems;
-		this->extraText = extraText;
-		this->selection = 0;
-		this->renderedSelection = 0;
-		this->renderedRow = 0;
-	}
+	Menu(std::string title, MenuItem items[], int numItems, std::string extraText);
 	
 	void onConstruction();
 	
