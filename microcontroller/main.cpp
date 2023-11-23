@@ -1,7 +1,7 @@
 
 #include <stdio.h>
 #include "pico/stdlib.h"
-
+#include "pico/multicore.h"
 #include "graphicLCD.h"
 #include "RotaryEncoder.h"
 #include "DisplayManager.h"
@@ -10,6 +10,8 @@
 #include "inputs.h"
 #include "sensors.h"
 #include "menus/Menus.h"
+#include <iostream>
+#include "serverComm.h"
 
 SplashPage* _splashPage;
 
@@ -18,7 +20,33 @@ void blankFunc()
 	
 }
 
+
+void coreOneReads()
+{
+	while (true)
+	{
+		int i = 0;
+		char jsonChar[256];
+	
+		do	
+		{
+			//std::getline(std::cin, jsonStr);
+			jsonChar[i] = getchar();
+		} while (jsonChar[i++] != '\n');
+	
+		readMessage(jsonChar);
+	}
+	//printf("{\"jsonrpc\": \"2.0\",\"method\": \"event/log\",\"params\": {\"severity\" : \"debug\",\"message\" : \"This is a test!\"}}\n");
+
+	
+
+}
+
 int main() {
+	stdio_init_all();
+	
+	test();
+	
 	//testing display stuff
 	
 	/*MenuItem items[] = {
@@ -34,6 +62,15 @@ int main() {
 	};
 	
 	Menu testMenu("This is a test 2", items, 4);*/
+	
+	
+	//Initialize core 1 to await server messages
+	sleep_ms(10);
+	multicore_reset_core1();
+	sleep_ms(10);
+	multicore_launch_core1(coreOneReads);
+	
+	
 	
 	GraphicLCD::init();
 	alarm_pool_init_default();

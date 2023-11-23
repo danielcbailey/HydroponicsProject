@@ -1,9 +1,12 @@
 #pragma once
 
-float getPH(); //In PH units
+float getpH();
 
-float getEC(); //In EC units
-
+float getEC();
+void calibratePH(); //Calibration procedure 
+void calibratePoint(char point, float *lastMean, float *slopeAcid, float *slopeBase, float *zeroOffset); //Calibrates to mid low or high point for pH sensor 
+float getContUART(char cont, bool pH); //Get the continuous values from either pH or EC sensor
+float getSingleUART(bool pH); //Gets a single value from pH or EC
 float getWaterLevel(); //In inches
 
 float getPumpRate(); //In Gallons per minute

@@ -4,6 +4,11 @@
 #include "hardwareSetup.h"
 #include <stdint.h>
 #include "communication.h"
+#include "hardware/uart.h"
+#include <stdlib.h> /*atof */
+#include <cmath> /*pow */
+#include <iostream>
+#include <sstream>
 
 float lastPH = 0.0f;
 
@@ -21,6 +26,8 @@ void airSensorCommand(uint16_t cmd, uint16_t data);
 uint16_t airSensorRead(uint16_t address);
 void airSensorReadMultiple(uint16_t address, uint8_t* buf, int length);
 
+float getSingleUART(bool pH);
+
 uint8_t gencrc(uint8_t *data, size_t len)
 {
 	uint8_t crc = 0xff;
@@ -37,14 +44,202 @@ uint8_t gencrc(uint8_t *data, size_t len)
 	return crc;
 }
 
-float getPH()
+float getpH()
 {
-	return lastPH;
+	return getSingleUART(1);
 }
 
-float getEC()
+float getEC() 
 {
-	return lastEC;
+	return getSingleUART(0); 
+}
+void calibratePoint(char point, float *lastMean, float *slopeAcid, float *slopeBase, float *zeroOffset)
+{
+	float stDev, targetStDev = 0.01;
+	float mean, sum;
+	float levels[10];
+	bool stabilized = false;
+	
+	while (!stabilized)
+	{
+		mean = 0;
+		stDev = 0;
+		for (int i = 0; i < size_t(levels); i++)
+		{
+			levels[i] = getSingleUART(1);
+			sum += levels[i];
+		}
+		//calculate stdev
+		mean = sum / size_t(levels);
+		for (int i = 0; i < size_t(levels); ++i) {
+			stDev += pow(levels[i] - mean, 2);
+		}
+		stDev = sqrt(stDev / size_t(levels));
+		
+		if (stDev < targetStDev)
+		{
+			char c;
+			if (point == 'm' && mean > 6 && mean < 8)
+			{
+				//mid point calibration
+				uart_puts(uart0, "Cal,mid,7.00\r");
+			}
+			else if (point == 'l' && mean < 5)
+			{
+				//low point calibration
+				uart_puts(uart0, "Cal,low,4.00\r");
+			}
+			else if (point == 'h' && mean > 9)
+			{
+				//high point calibration
+				uart_puts(uart0, "Cal,high,10.00\r");
+			}
+			//loop for dumping OK  
+			while (c != '\r')
+			{
+				c = uart_getc(uart0);
+			}
+			stabilized = true;	
+		}
+	}
+	// now the readings are stabilized
+	uart_puts(uart0, "Slope,?\r");
+	//example response 
+	//?Slope,99.7,100.3,-0.89<cr>
+	//*OK<cr>
+	
+	char c; //first part
+	while (c != ',')
+	{
+		c = uart_getc(uart0); //Sensor
+	}
+	char slopes[256];
+	for (int i = 0; slopes[i] != '\r'; i++)
+	{
+		//slope values into the char array 
+		slopes[i] = uart_getc(uart0);
+	}
+	std::istringstream sss(slopes);
+	char comma;
+	float slopeA, slopeB, zeroOff;
+	sss >> slopeA >> comma >> slopeB >> comma >> zeroOff;
+	
+	*slopeAcid = slopeA;
+	*slopeBase = slopeB;
+	*zeroOffset = zeroOff;
+	return;
+}
+void calibratePH() 
+{
+	
+	
+	//three point calibration
+	
+	//step 1 dry calibration: "cal,dry"
+	//step 2 "cal,mid,n"
+	//step 3 "cal,low,n"
+	//step 4 "cal,high,n"
+	
+}
+
+void wakeUpUartSensor(uart_inst_t* uart)
+{
+	uart_puts(uart, "Status\r");
+	
+	char c;
+	int pos = 0;
+	char expecting[] = "*\r";
+	while (pos < 2)
+	{ 
+		c = uart_getc(uart);
+		if (c == expecting[pos])
+		{
+			pos++;
+		}
+	}
+	
+	busy_wait_us(200000);
+}
+
+float getContUART(char cont, bool pH = 1)
+{
+	//cont = 1 reading per once per sec
+	//cont = 2 to 99 reading every n sec
+	//cont = 0 disable cont readings
+	//cont = ? reading mode on/off? ? = 63
+}
+
+float getSingleUART(bool pH = 1)
+{
+	uart_inst_t *uart;
+	if (pH)
+	{
+		uart = uart0; //get pH value
+	}
+	else
+	{
+		uart = uart1; //get EC value
+	}
+	
+	wakeUpUartSensor(uart);
+	
+	uart_puts(uart, "R\r");
+	//example response for pH
+	// 9.560 <cr>
+	// *OK <cr>
+	//example response for EC
+	// 1413 <cr>
+	// *OK <cr>
+	float val;
+	char fl[32];
+	char c;
+
+		
+	for (int i = 0; i <32; i++)
+	{
+		c = uart_getc(uart);
+		if (c == '\r')
+		{
+			fl[i] = 0;
+			break;
+		}
+		//first buffer for the float
+		fl[i] = c;
+	}
+	
+	if (fl[0] == '*')
+	{
+		// an error occurred.
+		
+		return 0;
+	}
+	
+	//loop for dumping OK  
+	do
+	{
+		c = uart_getc(uart);
+		
+	} while (c != '\r');
+	
+	val = atof(fl);
+	
+	if (pH)
+	{
+		uart_puts(uart, "Sleep\r");
+		char expectingSL[] = "*SL\r";
+		int pos = 0;
+		while (pos < 4)
+		{ 
+			c = uart_getc(uart);
+			if (c == expectingSL[pos])
+			{
+				pos++;
+			}
+		}
+	}
+	
+	
+	return val;
 }
 
 float getWaterLevel()
@@ -178,6 +373,70 @@ void initSensors()
 	i2c_init(i2c0, 50000);
 	gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);
 	gpio_set_function(I2C_SCL, GPIO_FUNC_I2C);
+	
+	//initialize UART for pH readings
+    uart_init(uart0, 9600); //default rate for ezo_PH
+	//UART - 0 is TX, 1 is RX
+	gpio_set_function(PH_TX, GPIO_FUNC_UART);
+	gpio_set_function(PH_RX, GPIO_FUNC_UART);
+	
+	//disable the default continuous reading for pH sensor
+	wakeUpUartSensor(uart0);
+	uart_puts(uart0, "C,0\r");
+	char c;
+	int pos = 0;
+	char expecting[] = "*OK\r";
+	while (pos < 4)
+	{ 
+		c = uart_getc(uart0);
+		if (c == expecting[pos])
+		{
+			pos++;
+		}
+	}
+	
+	uart_puts(uart0, "Sleep\r"); 
+	pos = 0;
+	char expectingSL[] = "*SL\r";
+	while (pos < 4)
+	{ 
+		c = uart_getc(uart0);
+		if (c == expectingSL[pos])
+		{
+			pos++;
+		}
+	}
+	
+	//initialize UART for electrical conductivity readings
+	uart_init(uart1, 9600); //default rate for EC
+	gpio_set_function(EC_TX, GPIO_FUNC_UART);
+	gpio_set_function(EC_RX, GPIO_FUNC_UART);
+	
+	//disable the default continuous reading for EC sensor
+	wakeUpUartSensor(uart1);
+	uart_puts(uart1, "C,0\r");
+	pos = 0;
+	while (pos < 4)
+	{ 
+		c = uart_getc(uart1);
+		if (c == expecting[pos])
+		{
+			pos++;
+		}
+	}
+	
+	/*
+	uart_puts(uart1, "Sleep\r"); 
+	pos = 0;
+	while (pos < 4)
+	{ 
+		c = uart_getc(uart1);
+		if (c == expectingSL[pos])
+		{
+			pos++;
+		}
+	}
+	*/
 	
 	airSensorCommand(0x0010, 0);
 	sleep_ms(3);
