@@ -12,6 +12,7 @@
 #include "menus/Menus.h"
 #include <iostream>
 #include "serverComm.h"
+#include "schedule.h"
 
 SplashPage* _splashPage;
 
@@ -33,6 +34,8 @@ void coreOneReads()
 			//std::getline(std::cin, jsonStr);
 			jsonChar[i] = getchar();
 		} while (jsonChar[i++] != '\n');
+		
+		jsonChar[i-1] = 0;
 	
 		readMessage(jsonChar);
 	}

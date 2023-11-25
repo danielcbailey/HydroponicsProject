@@ -5,19 +5,89 @@
 #include "serverComm.h"
 #include <stdio.h>
 #include <unordered_map>
+#include <list>
+#include "schedule.h"
+#include "string.h"
 
 void timeHandler(cJSON* params, int reqID)
 {
 	printf("TIME HANDLER WOO HOOO (id %d)\n", reqID);
 }
 
-typedef void(*commandHandler)(cJSON*, int);
+void scheduleHandler(cJSON* params, int reqID) 
+{
+	printf("SCHEDULE HANDLER WOO HOOO (id %d)\n", reqID);
+	
+	cJSON *scheduleArr = cJSON_GetObjectItem(params, "schedule");
+	printf("stupid json schedule \n");
+	
+	//printf(cJSON_Print(schedule));
+	std::list <gardenEvent>eventsList;
+	cJSON *eventJSON, *eventType, *eventTime;
+	gardenEvent newEvent;
+	for (int i = 0; i < cJSON_GetArraySize(scheduleArr); i++) 
+	{
+		eventJSON = cJSON_GetArrayItem(scheduleArr, i);
+		eventType = cJSON_GetObjectItem(eventJSON, "event_type");
+		eventTime = cJSON_GetObjectItem(eventJSON, "event_time");
 
+		//getting event type 
+		eventTypes newEnum;
+		if (strcmp(eventType->valuestring, "PUMP_ON") == 0)
+		{
+			newEnum = PUMP_ON;
+		}
+		else if (strcmp(eventType->valuestring, "PUMP_OFF") == 0)
+		{
+			newEnum = PUMP_OFF;
+		} 
+		else if (strcmp(eventType->valuestring, "LIGHT_ON") == 0)
+		{
+			newEnum = LIGHT_ON;
+		}
+		else if (strcmp(eventType->valuestring, "LIGHT_OFF") == 0)
+		{
+			newEnum = LIGHT_OFF;
+		}
+		newEvent.eventType = newEnum;
+		newEvent.eventTime = eventTime->valueint;
+		eventsList.push_back(newEvent);
+		
+	}
+	bool success = updateSchedule(eventsList);
+	if (success)
+	{
+		printf("yay!");
+		sendAck(reqID);
+	}
+}
+typedef void(*commandHandler)(cJSON*, int);
 std::unordered_map<std::string, commandHandler> commandHandlers = { 
-	{"config/settime", timeHandler}	
+	{"config/settime", timeHandler},
+	{"config/setschedule", scheduleHandler}
 };
 
-void sendAck() 
+void pumpOn(cJSON* event, int reqID)
+{
+	
+}
+void pumpOff(cJSON* event, int reqID)
+{
+	
+}
+
+void lightOn(cJSON* event, int reqID)
+{
+	
+}
+void lightOff(cJSON* event, int reqID)
+{
+	
+}
+
+
+
+void sendAck(int reqID) 
 {
 	
 }
@@ -27,7 +97,6 @@ void readMessage(std::string testJSON)
 	printf("readMessage func %s\n", testJSON.c_str());
 	cJSON *test = cJSON_Parse(testJSON.c_str());
 	cJSON *jsonRPC = cJSON_GetObjectItem(test, "jsonrpc"); //"2.0"
-	printf(cJSON_Print(jsonRPC));
 	cJSON *method = cJSON_GetObjectItem(test, "method"); // "some/remote/procedure"
 	if (commandHandlers.count(method->valuestring) == 0)
 	{
@@ -43,15 +112,6 @@ void readMessage(std::string testJSON)
 	cJSON *params = cJSON_GetObjectItem(test, "params");
 	handler(params, id->valueint);
 	
-	cJSON *schedule = cJSON_GetObjectItem(params, "schedule");
-	printf("stupid json schedule \n");
-	
-	printf(cJSON_Print(schedule));
-
-	cJSON *second = cJSON_GetArrayItem(schedule, 1);
-	printf("item \n");
-	printf(cJSON_Print(second));
-	printf(cJSON_Print(id));
 }
 
 
