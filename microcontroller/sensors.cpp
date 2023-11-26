@@ -370,10 +370,18 @@ float getAirCO2()
 
 void initSensors()
 {
+
+	//air sensor readings
 	i2c_init(i2c0, 50000);
 	gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);
 	gpio_set_function(I2C_SCL, GPIO_FUNC_I2C);
-	
+
+	//light sensor readings
+	//i2c_init(isc1, 50000); //TO DO check baudrate i2c1
+	//gpio_set_function(TODO , GPIO_FUNC_I2C);
+	//gpio_set_function(TODO, GPIO_FUNC_I2C);
+
+
 	//initialize UART for pH readings
     uart_init(uart0, 9600); //default rate for ezo_PH
 	//UART - 0 is TX, 1 is RX

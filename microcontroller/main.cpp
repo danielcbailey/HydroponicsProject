@@ -48,8 +48,6 @@ void coreOneReads()
 int main() {
 	stdio_init_all();
 	
-	test();
-	
 	//testing display stuff
 	
 	/*MenuItem items[] = {

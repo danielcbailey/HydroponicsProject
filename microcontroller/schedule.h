@@ -14,6 +14,11 @@ typedef struct {
 	
 } gardenEvent;
 
+typedef struct {
+	bool light;
+	bool pump;
+} currState;
+
 gardenEvent getScheduleEvent(datetime_t currTime); //get the event to perform now 
 
 gardenEvent getNextEvent(datetime_t currTime); //for displaying the next event and remaining time on the screen

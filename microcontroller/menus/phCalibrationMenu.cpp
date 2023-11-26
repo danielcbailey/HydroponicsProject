@@ -8,22 +8,32 @@ Menu* _phMenu;
 void onFirst2Selected()
 {
 }
+
 void onMidPointSelected()
 {
 	float lastMean, slopeAcid, slopeBase, zeroOffset;
 	calibratePoint('m', &lastMean, &slopeAcid, &slopeBase, &zeroOffset);
+	GraphicLCD::locate(0, 6);
+	GraphicLCD::printf("Last mean: %.2fF, Zero Offset: %.2fF\n", lastMean, slopeAcid);
+	GraphicLCD::printf("Acid slope: %.2fF, Acid base: %.2fF\n", slopeAcid, slopeBase);
 }
 
 void onLowPointSelected()
 {
 	float lastMean, slopeAcid, slopeBase, zeroOffset;
 	calibratePoint('l', &lastMean, &slopeAcid, &slopeBase, &zeroOffset);
+	GraphicLCD::locate(0, 6);
+	GraphicLCD::printf("Last mean: %.2fF, Zero Offset: %.2fF\n", lastMean, slopeAcid);
+	GraphicLCD::printf("Acid slope: %.2fF, Acid base: %.2fF\n", slopeAcid, slopeBase);
 }
 
 void onHighPointSelected()
 {
 	float lastMean, slopeAcid, slopeBase, zeroOffset;
 	calibratePoint('h', &lastMean, &slopeAcid, &slopeBase, &zeroOffset);
+	GraphicLCD::locate(0, 6);
+	GraphicLCD::printf("Last mean: %.2fF, Zero Offset: %.2fF\n", lastMean, slopeAcid);
+	GraphicLCD::printf("Acid slope: %.2fF, Acid base: %.2fF\n", slopeAcid, slopeBase);
 }
 
 void onBack2Selected()
