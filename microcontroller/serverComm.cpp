@@ -8,10 +8,54 @@
 #include <list>
 #include "schedule.h"
 #include "string.h"
+#include "outputs.h"
+#include <ctime>
 
 void timeHandler(cJSON* params, int reqID)
 {
-	printf("TIME HANDLER WOO HOOO (id %d)\n", reqID);
+	datetime_t picoTime;
+	rtc_get_datetime(&picoTime);
+	
+	std::time_t newTime = cJSON_GetObjectItem(params, "unixtime")->valueint;
+	
+	// Convert Unix time to a tm structure
+	std::tm* timeinfo = std::localtime(&newTime);
+	int16_t year = timeinfo->tm_year + 1900; // tm_year is years since 1900
+	int8_t month = timeinfo->tm_mon + 1; // tm_mon is 0-based
+	int8_t day = timeinfo->tm_mday;
+	int8_t hour = timeinfo->tm_hour;
+	int8_t minute = timeinfo->tm_min;
+	int8_t second = timeinfo->tm_sec;
+	int8_t dayOfWeek = timeinfo->tm_wday; 
+	
+	datetime_t timeToSet = { 
+		year,
+		month,
+		day,
+		dayOfWeek,
+		hour,
+		minute, 
+		second 
+	};
+	rtc_set_datetime(&timeToSet);
+	
+	sendAck(reqID);
+	
+}
+
+void sendError(int reqID, int errorCode, const char* errorMessage)
+{
+	cJSON* nAck = cJSON_CreateObject();
+	cJSON_AddStringToObject(nAck, "jsonrpc", "2.0");
+	cJSON_AddNumberToObject(nAck, "id", reqID);
+	cJSON_AddObjectToObject(nAck, "error");
+	cJSON* errorObj = cJSON_GetObjectItem(nAck, "error");
+	cJSON_AddNumberToObject(errorObj, "code", errorCode);
+	cJSON_AddStringToObject(errorObj, "message", errorMessage);
+
+	char* returnStr = cJSON_PrintUnformatted(nAck);
+	printf("%s\n", returnStr);
+	cJSON_Delete(nAck);
 }
 
 void scheduleHandler(cJSON* params, int reqID) 
@@ -50,11 +94,23 @@ void scheduleHandler(cJSON* params, int reqID)
 		newEvent.eventTime = eventTime->valueint;
 		eventsList.push_back(newEvent);
 	}
-
+	
 	bool success = updateSchedule(eventsList);
+	
+	//after the update check if there are any events the controller needs to catch up 
+	datetime_t currTime;
+	rtc_get_datetime(&currTime);
+	currState stateNow = getStateAtTime(currTime);
+	setLight(stateNow.light);
+	setPump(stateNow.pump);
+
 	if (success)
 	{
 		sendAck(reqID);
+	}
+	else
+	{
+		sendError(reqID, ERROR_UNKNOWN_ERROR, "Update Schedule was not successful!");
 	}
 }
 typedef void(*commandHandler)(cJSON*, int);
@@ -77,20 +133,7 @@ void sendAck(int reqID)
 
 }
 
-void sendError(int reqID, int errorCode, const char* errorMessage)
-{
-	cJSON* nAck = cJSON_CreateObject();
-	cJSON_AddStringToObject(nAck, "jsonrpc", "2.0");
-	cJSON_AddNumberToObject(nAck, "id", reqID);
-	cJSON_AddObjectToObject(nAck, "error");
-	cJSON* errorObj = cJSON_GetObjectItem(nAck, "error");
-	cJSON_AddNumberToObject(errorObj, "code", errorCode);
-	cJSON_AddStringToObject(errorObj, "message", errorMessage);
 
-	char* returnStr = cJSON_PrintUnformatted(nAck);
-	printf("%s\n", returnStr);
-	cJSON_Delete(nAck);
-}
 
 void readMessage(std::string testJSON)
 {
