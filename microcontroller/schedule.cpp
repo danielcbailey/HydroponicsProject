@@ -28,7 +28,7 @@ gardenEvent getScheduleEvent(datetime_t currTime)
 
 	std::list<gardenEvent>::reverse_iterator revit;
 	for (revit = gardenSchedule.rbegin(); revit != gardenSchedule.rend(); revit++) {
-		if (revit->eventTime < time) {
+		if (revit->eventTime <= time) {
 			return *revit;
 		}
 	}
@@ -83,16 +83,6 @@ currState getStateAtTime(datetime_t currTime) //If after updating the schedule a
 
 bool updateSchedule(std::list <gardenEvent>newEvents)
 {
-	datetime_t t = {
-		.year = 2020,
-		.month = 06,
-		.day = 05,
-		.dotw = 5, // 0 is Sunday, so 5 is Friday
-		.hour = 5,
-		.min = 07,
-		.sec = 00
-	};
-
 	gardenSchedule = newEvents;
 	return true;
 }

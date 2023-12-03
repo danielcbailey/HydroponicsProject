@@ -26,3 +26,5 @@ gardenEvent getNextEvent(datetime_t currTime); //for displaying the next event a
 
 bool updateSchedule(std::list <gardenEvent>newEvents); //updates the schedule based on the new schedule sent by the server 
 //returns a bool if updated successfully 
+
+currState getStateAtTime(datetime_t currTime);

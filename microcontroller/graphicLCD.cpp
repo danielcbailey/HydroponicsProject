@@ -227,6 +227,7 @@ void GraphicLCD::writeBitmap(bool data[], char width, char height, char x, char 
 			}
 		}
 	}
+	
 }
 
 void GraphicLCD::locate(char x, char y)

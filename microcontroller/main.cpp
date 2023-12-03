@@ -13,6 +13,8 @@
 #include <iostream>
 #include "serverComm.h"
 #include "schedule.h"
+#include "hardware/rtc.h"
+#include "outputs.h"
 
 SplashPage* _splashPage;
 
@@ -21,13 +23,13 @@ void blankFunc()
 	
 }
 
+char jsonChar[1024];
 
 void coreOneReads()
 {
 	while (true)
 	{
 		int i = 0;
-		char jsonChar[256];
 	
 		do	
 		{
@@ -45,7 +47,28 @@ void coreOneReads()
 
 }
 
+void performEvent(eventTypes currEvent) {
+	switch (currEvent) {
+	case NO_EVENT:
+		break;
+	case PUMP_ON:
+		setPump(1);
+		break;
+	case PUMP_OFF:
+		setPump(0);
+		break;
+	case LIGHT_ON:
+		setLight(1);
+		break;
+	case LIGHT_OFF:
+		setLight(0);
+		break;
+	}
+}
+
+
 int main() {
+	rtc_init();
 	stdio_init_all();
 	
 	//testing display stuff
@@ -81,6 +104,7 @@ int main() {
 	GraphicLCD::print((char*)"Initializing...");
 	sleep_ms(3000);
 	initSensors();
+	outputsInit();
 	
 	GraphicLCD::locate(0, 0);
 	GraphicLCD::print((char*)"ERROR INTIALIZING");
@@ -92,11 +116,24 @@ int main() {
 	_displayManager = new DisplayManager(_splashPage);
 	
 	uint64_t t = 0;
+	datetime_t currTime;
+	gardenEvent prevEvent;
 	while (true)
 	{
 		sleep_ms(100);
 		uint64_t temp = to_us_since_boot(get_absolute_time());
 		float dt = (float)(temp - t) / 1000000;
 		_displayManager->dispatchTick(dt);
+
+		rtc_get_datetime(&currTime);
+		gardenEvent currEvent = getScheduleEvent(currTime); //check if there is an event to do 
+		if (currEvent.eventType != prevEvent.eventType) {
+			//perform the event type
+			performEvent(currEvent.eventType);
+
+		}
+
+		prevEvent = currEvent;
+
 	}
 }
