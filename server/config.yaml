@@ -1,0 +1,2 @@
+timezone_offset_mins: -300
+clickhouse_conn_string: "tcp://localhost:9000?debug=true"
