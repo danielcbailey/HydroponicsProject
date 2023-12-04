@@ -9,7 +9,9 @@
 #include "schedule.h"
 #include "string.h"
 #include "outputs.h"
-#include <ctime>
+#include "sensors.h"
+
+std::time_t msgTime;
 
 void timeHandler(cJSON* params, int reqID)
 {
@@ -113,10 +115,86 @@ void scheduleHandler(cJSON* params, int reqID)
 		sendError(reqID, ERROR_UNKNOWN_ERROR, "Update Schedule was not successful!");
 	}
 }
+
+void sensorReader(cJSON* params, int reqID) 
+{
+	cJSON* resp = cJSON_CreateObject();
+	cJSON_AddStringToObject(resp, "jsonrpc", "2.0");
+	cJSON_AddNumberToObject(resp, "id", reqID);
+	cJSON_AddObjectToObject(resp, "result");
+	cJSON* resultObj = cJSON_GetObjectItem(resp, "result");
+
+	//add the sensor readings to the result object 
+	cJSON_AddNumberToObject(resultObj, "water_level", getWaterLevel());
+	cJSON_AddNumberToObject(resultObj, "cumulative_liquid_flow", 0);
+	cJSON_AddNumberToObject(resultObj, "current_liquid_flow", 0);
+	cJSON_AddNumberToObject(resultObj, "light_intensity", getLightLevel());
+	cJSON_AddNumberToObject(resultObj, "pH", getpH());
+	cJSON_AddNumberToObject(resultObj, "electrical_conductivity", getEC());
+	cJSON_AddNumberToObject(resultObj, "air_temperature", getAirTemp());
+	cJSON_AddNumberToObject(resultObj, "air_relative_humidity", getAirHumidity());
+	cJSON_AddNumberToObject(resultObj, "air_co2_ppm", (int)getAirCO2());
+	
+	
+	char* returnStr = cJSON_PrintUnformatted(resp);
+	printf("%s\n", returnStr);
+	free(returnStr); 
+	cJSON_Delete(resp); //deallocate 
+}
+
+void manualSetPump(cJSON* params, int reqID) 
+{	
+	bool state = cJSON_GetObjectItem(params, "state");
+	bool success;
+	if (state)
+	{		
+		success = setPump(1);
+	}
+	else
+	{
+		success = setPump(0);
+	}
+	
+	if (success)
+	{
+		sendAck(reqID);
+	}
+	else
+	{
+		sendError(reqID, ERROR_PUMP, "Water tank is lower than the minimum water level!");
+	}
+}
+
+void manualSetLight(cJSON* params, int reqID) 
+{	
+	bool state = cJSON_GetObjectItem(params, "state");
+	bool success;
+	if (state)
+	{
+		success = setLight(1);
+	}
+	else
+	{
+		success = setLight(0);
+	}
+	
+	if (success)
+	{
+		sendAck(reqID);
+	}
+	else
+	{
+		// to do return error
+	}
+}
+
 typedef void(*commandHandler)(cJSON*, int);
 std::unordered_map<std::string, commandHandler> commandHandlers = { 
 	{"config/settime", timeHandler},
-	{"config/setschedule", scheduleHandler}
+	{"config/setschedule", scheduleHandler},
+	{"sensors/read", sensorReader},
+	{"controls/setpump", manualSetPump},
+	{"sensors/setlight", manualSetLight},	
 };
 
 void sendAck(int reqID) 
@@ -133,10 +211,42 @@ void sendAck(int reqID)
 
 }
 
+// Function to convert datetime_t to Unix timestamp
+std::time_t datetimeToUnixTimestamp(const datetime_t& dt) {
+	struct std::tm timeinfo = { };
 
+	timeinfo.tm_year = dt.year - 1900; // Years since 1900
+	timeinfo.tm_mon = dt.month - 1; // Month (0-based)
+	timeinfo.tm_mday = dt.day; // Day of the month
+	timeinfo.tm_hour = dt.hour; // Hours
+	timeinfo.tm_min = dt.min; // Minutes
+	timeinfo.tm_sec = dt.sec; // Seconds
 
+	// Convert to Unix timestamp using mktime
+	return std::mktime(&timeinfo);
+}
+
+datetime_t getCurrentTime()
+{
+	datetime_t currentTime;
+	currentTime.month = 12;
+	rtc_get_datetime(&currentTime);
+	return currentTime;
+}
+bool checkConnectionTimeout()
+{
+	datetime_t currentTime = getCurrentTime();
+	std::time_t currTime = datetimeToUnixTimestamp(currentTime);
+	// Check if the latest server message was received in the last minute 
+	return (currTime - msgTime) <= 60;
+}
 void readMessage(std::string testJSON)
 {
+	//start the timer to calculate the last time
+	datetime_t messageTime;
+	rtc_get_datetime(&messageTime);
+	msgTime = datetimeToUnixTimestamp(messageTime);
+	
 	cJSON *jsonRoot = cJSON_Parse(testJSON.c_str());
 	cJSON *jsonRPC = cJSON_GetObjectItem(jsonRoot, "jsonrpc"); //"2.0"
 	cJSON *method = cJSON_GetObjectItem(jsonRoot, "method"); // "some/remote/procedure"

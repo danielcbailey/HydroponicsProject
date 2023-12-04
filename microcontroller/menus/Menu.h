@@ -8,9 +8,20 @@ typedef std::function<void()> MenuCallback;
 
 class MenuItem
 {
+private:
+	inline static void dummy()
+	{
+		// nothing...
+	}
 public:
 	std::string text;
 	MenuCallback callback;
+	
+	inline MenuItem()
+	{
+		this->text = "";
+		this->callback = MenuItem::dummy;
+	}
 	
 	inline MenuItem(std::string text, MenuCallback cb)
 	{

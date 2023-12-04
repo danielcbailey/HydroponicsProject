@@ -1,0 +1,84 @@
+#include "Menu.h"
+#include "Menus.h"
+#include "DisplayManager.h"
+#include "sensors.h"
+#include "phCalibMenu.h"
+#include "inputs.h"
+#include "graphicLCD.h"
+
+void phCalibMenu::onConstruction()
+{
+	GraphicLCD::clear();
+	setButtonCallback(std::bind(&phCalibMenu::handleButton, this));
+	startCalibration(); //setup the circular buffer 
+}
+
+void phCalibMenu::onDestruction()
+{
+	setButtonCallback(std::bind(&defaultButtonCallback));
+}
+
+void phCalibMenu::onUpdate(float dt)
+{
+	this->renderDisplay();
+}
+
+void phCalibMenu::handleButton()
+{
+	// transition to the navigation menu
+	switchToNavigationMenu();
+}
+
+void phCalibMenu::renderDisplay()
+{
+	/*SENSOR IN MIDPOINT
+	Press knob to GO BACK
+	Reading: 7.80 Ph
+	Sensor calibrating...
+	Mean:	Stdev:
+	SUCCESSFUL!
+	*/
+	char calibPoint = 'm';
+	
+	GraphicLCD::locate(0, 0);
+	GraphicLCD::printFullLine((char*)"SENSOR IN 7.0pH");
+	GraphicLCD::locate(0, 1);
+	GraphicLCD::printFullLine((char*)"PRESS KNOB TO CANCEL");
+	bool calibCont = calibrationTick(calibPoint);
+	
+	if (calibCont)
+	{
+		GraphicLCD::locate(0, 2);
+		GraphicLCD::printFullLine((char*)"IN PROGRESS...");
+		// calibration is still running so display should show as such
+	}
+	else
+	{
+		GraphicLCD::locate(0, 2);
+		GraphicLCD::printFullLine((char*)"SUCCESS!");
+		// the calibration is not running, so the display can show done	
+	}
+	
+	GraphicLCD::locate(0, 3);
+	GraphicLCD::printf("%.3f PH \n", getpH());
+
+	float lastMean = returnLastMean();
+	float zeroOffset = returnzeroOffset();
+	if(lastMean && zeroOffset)
+	{
+		GraphicLCD::locate(0, 4);
+		GraphicLCD::printf("MEAN: %.2f OFFST: %.3f \n", lastMean, zeroOffset);
+	}
+	float slopeAcid = returnLastMean();
+	float slopeBase = returnzeroOffset();
+	if (slopeAcid && slopeBase)
+	{
+		GraphicLCD::locate(0, 5);
+		GraphicLCD::printf("ACID: %.3f BASE: %.3f \n", lastMean, zeroOffset);
+	}
+}
+
+void switchToMidCalibration()
+{
+	_displayManager->setElement(_phCalibMenu);
+}

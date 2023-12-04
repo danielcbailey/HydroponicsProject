@@ -28,3 +28,5 @@ bool updateSchedule(std::list <gardenEvent>newEvents); //updates the schedule ba
 //returns a bool if updated successfully 
 
 currState getStateAtTime(datetime_t currTime);
+
+std::list <gardenEvent> getAllSchedule(); //get all of the schedule to display on the screen

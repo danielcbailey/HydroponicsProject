@@ -86,3 +86,9 @@ bool updateSchedule(std::list <gardenEvent>newEvents)
 	gardenSchedule = newEvents;
 	return true;
 }
+
+
+std::list <gardenEvent> getAllSchedule() 
+{
+	return gardenSchedule;
+}

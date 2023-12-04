@@ -1,6 +1,8 @@
 #include "outputs.h"
 #include "hardwareSetup.h"
 #include "hardware/gpio.h"
+#include "sensors.h"
+
 
 void outputsInit() {
 	gpio_init(PUMP_CONTROL);
@@ -14,12 +16,33 @@ void outputsInit() {
 	gpio_put(LIGHT_CONTROL, true);
 }
 
-void setLight(bool on)
+bool setLight(bool on)
 {
-	gpio_put(LIGHT_CONTROL, !on);
+	if ((on && getAirTemp() < MAX_TEMPERATURE) || !on)
+	{
+		//temperature should be lower than the max temperature set for the light to turn on 
+		// however it could be turned off at any time 
+		gpio_put(LIGHT_CONTROL, !on);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
-void setPump(bool on)
+bool setPump(bool on)
 {
-	gpio_put(PUMP_CONTROL, !on);
+	if ((on && getWaterLevel() >= MIN_WATER_LEVEL) || !on)
+	{
+		//water level should be higher than the min level if the user wants to turn it on
+		// however the pump can be turned off any time  
+		gpio_put(PUMP_CONTROL, !on);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+	
 }

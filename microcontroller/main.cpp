@@ -15,8 +15,28 @@
 #include "schedule.h"
 #include "hardware/rtc.h"
 #include "outputs.h"
-
+#include "menus/phHighCalibMenu.h"
+#include "menus/SensorMenu.h"
+#include "menus/phCalibMenu.h"
+#include "menus/phLowCalibMenu.h"
+#include "menus/ecHighCalib.h"
+#include "menus/ecLowCalib.h"
+#include "menus/ecDryCalib.h"
 SplashPage* _splashPage;
+
+SensorMenu* _SensorMenu;
+
+phCalibMenu* _phCalibMenu;
+
+phLowCalibMenu* _phLowCalibMenu;
+
+phHighCalibMenu* _phHighCalibMenu;
+
+ecLowCalibMenu* _ecLowCalibMenu;
+
+ecHighCalibMenu* _ecHighCalibMenu;
+
+ecDryCalibMenu* _ecDryCalibMenu;
 
 void blankFunc()
 {
@@ -66,26 +86,29 @@ void performEvent(eventTypes currEvent) {
 	}
 }
 
+void safetyCheck()
+{
+	if (getAirTemp() >= MAX_TEMPERATURE)
+	{	
+		setLight(0);
+		//send info to server 
+		//log to a warning log 
+	}
+	if (getWaterLevel() <= MIN_WATER_LEVEL) 
+	{
+		setPump(1);
+		//send info to server 
+		//log to a warning log 
+	}
+	
+}
 
 int main() {
 	rtc_init();
 	stdio_init_all();
+	datetime_t dummyTime = { 2000, 1, 1, 1, 1, 1, 1 };
 	
-	//testing display stuff
-	
-	/*MenuItem items[] = {
-		MenuItem("Test 1", std::bind(&blankFunc)),
-		MenuItem("Test 2", std::bind(&blankFunc)),
-		MenuItem("Test 3", std::bind(&blankFunc)),
-		//MenuItem("Test 4", std::bind(&blankFunc)),
-		//MenuItem("Test 5", std::bind(&blankFunc)),
-		//MenuItem("Test 6", std::bind(&blankFunc)),
-		//MenuItem("Test 7", std::bind(&blankFunc)),
-		//MenuItem("Test 8", std::bind(&blankFunc)),
-		MenuItem("Test 9", std::bind(&blankFunc)) 
-	};
-	
-	Menu testMenu("This is a test 2", items, 4);*/
+	rtc_set_datetime(&dummyTime);
 	
 	
 	//Initialize core 1 to await server messages
@@ -111,8 +134,23 @@ int main() {
 	
 	_splashPage = new SplashPage();
 	
+	//init all menus 
 	init_inputs();
 	initializeMainMenu();
+	_SensorMenu = new SensorMenu();
+	_phCalibMenu = new phCalibMenu();
+	_phLowCalibMenu = new phLowCalibMenu();
+	_phHighCalibMenu = new phHighCalibMenu();
+	_ecLowCalibMenu = new ecLowCalibMenu();
+	_ecHighCalibMenu = new ecHighCalibMenu();
+	_ecDryCalibMenu = new ecDryCalibMenu();
+
+	
+	initializeManualMenu();
+	initializeScheduleMenu();
+	initializephSelectMenu();
+	initializeECSelectMenu();
+	
 	_displayManager = new DisplayManager(_splashPage);
 	
 	uint64_t t = 0;
@@ -130,10 +168,10 @@ int main() {
 		if (currEvent.eventType != prevEvent.eventType) {
 			//perform the event type
 			performEvent(currEvent.eventType);
-
 		}
-
 		prevEvent = currEvent;
-
+		
+		//perform safety check as well
+		safetyCheck();
 	}
 }

@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include "communication.h"
 #include "hardware/uart.h"
+#include "hardware/adc.h"
 #include <stdlib.h> /*atof */
 #include <cmath> /*pow */
 #include <iostream>
@@ -27,6 +28,8 @@ uint16_t airSensorRead(uint16_t address);
 void airSensorReadMultiple(uint16_t address, uint8_t* buf, int length);
 
 float getSingleUART(bool pH);
+
+void wakeUpUartSensor(uart_inst_t* uart);
 
 uint8_t gencrc(uint8_t *data, size_t len)
 {
@@ -51,57 +54,115 @@ float getpH()
 
 float getEC() 
 {
-	return getSingleUART(0); 
-}
-void calibratePoint(char point, float *lastMean, float *slopeAcid, float *slopeBase, float *zeroOffset)
-{
-	float stDev, targetStDev = 0.01;
-	float mean, sum;
-	float levels[10];
-	bool stabilized = false;
-	
-	while (!stabilized)
+	float ret = 0;
+	for (int i = 0; 10 > i && ret == 0; i++)
 	{
-		mean = 0;
-		stDev = 0;
-		for (int i = 0; i < size_t(levels); i++)
+		if (i > 0)
 		{
-			levels[i] = getSingleUART(1);
-			sum += levels[i];
+			busy_wait_ms(1000);
 		}
-		//calculate stdev
-		mean = sum / size_t(levels);
-		for (int i = 0; i < size_t(levels); ++i) {
-			stDev += pow(levels[i] - mean, 2);
-		}
-		stDev = sqrt(stDev / size_t(levels));
-		
-		if (stDev < targetStDev)
-		{
-			char c;
-			if (point == 'm' && mean > 6 && mean < 8)
-			{
-				//mid point calibration
-				uart_puts(uart0, "Cal,mid,7.00\r");
-			}
-			else if (point == 'l' && mean < 5)
-			{
-				//low point calibration
-				uart_puts(uart0, "Cal,low,4.00\r");
-			}
-			else if (point == 'h' && mean > 9)
-			{
-				//high point calibration
-				uart_puts(uart0, "Cal,high,10.00\r");
-			}
-			//loop for dumping OK  
-			while (c != '\r')
-			{
-				c = uart_getc(uart0);
-			}
-			stabilized = true;	
-		}
+		ret = getSingleUART(0);
 	}
+	return ret;
+}
+
+bool calibrationRunning = false;
+float circularBuffer[16];
+int measurementCount; // for use with indexing the circular buffer, hint: % may be useful here
+float targetStDev = 0.01;
+float lastMean = 0, slopeAcid = 0, slopeBase = 0, zeroOffset = 0;
+void startCalibration()
+{
+	lastMean = 0;
+	// do stuff to initialize calibration to prepare for loop body
+	for (int i = 0; i < 16; i++)
+	{
+		circularBuffer[i] = i; // just an initial value that will cause it to have high
+							   // stddev so that it doesn't terminate the calibration early
+	}
+	measurementCount = 0;
+	calibrationRunning = true;
+}
+
+bool checkStabilization()
+{
+	//sum the array
+	float sum = 0;
+	for (int i = 0; i < 16; i++) {
+		sum += circularBuffer[i];
+	}
+	// calculating mean
+	float mean = sum / 16;
+	
+	float values = 0;
+	for (int i = 0; i < 16; i++) {
+		values += pow(circularBuffer[i] - mean, 2);
+	}
+	// variance is the square of standard deviation
+	float variance = values / 16;
+	float standardDeviation = sqrt(variance);
+	
+	if (standardDeviation > targetStDev)
+	{
+		return false;
+	}
+	lastMean = mean;
+	return true;
+	//if both the mean of the array is in between 6.5 and 7.5 & the st dev is below 0.5
+}
+
+void performCalibration(char p)
+{
+	char c = 0;
+	if (p == 'm')
+	{
+		//mid point calibration
+		uart_puts(uart0, "Cal,mid,7.00\r");
+	}
+	else if (p == 'l')
+	{
+		//low point calibration
+		uart_puts(uart0, "Cal,low,4.00\r");
+	}
+	else if (p == 'h')
+	{
+		//high point calibration
+		uart_puts(uart0, "Cal,high,10.00\r");
+	}
+	//loop for dumping OK  
+	while (c != '\r')
+	{
+		c = uart_getc(uart0);
+	}
+}
+
+void performECCalibration(char p)
+{
+	char c = 0;
+	if (p == 'l')
+	{
+		//mid point calibration
+		uart_puts(uart1, "Cal,low,12880\r");
+	}
+	else if (p == 'h')
+	{
+		//low point calibration
+		uart_puts(uart1, "Cal,high,80000\r");
+	} 
+	else if (p == 'd') 
+	{
+		//dry point calibration
+		uart_puts(uart1, "Cal,dry\r");
+	}
+	//loop for dumping OK  
+	while (c != '\r')
+	{
+		c = uart_getc(uart1);
+	}
+}
+
+void getValues()
+{
 	// now the readings are stabilized
 	uart_puts(uart0, "Slope,?\r");
 	//example response 
@@ -114,32 +175,155 @@ void calibratePoint(char point, float *lastMean, float *slopeAcid, float *slopeB
 		c = uart_getc(uart0); //Sensor
 	}
 	char slopes[256];
-	for (int i = 0; slopes[i] != '\r'; i++)
+	for (int i = 0; i < 256; i++)
 	{
 		//slope values into the char array 
 		slopes[i] = uart_getc(uart0);
+		if (slopes[i] == '\r')
+		{
+			slopes[i] = 0;
+			break;
+		}
 	}
+	
+	//loop for dumping OK
+	c = 0;
+	do
+	{
+		c = uart_getc(uart0);
+		
+	} while (c != '\r');
+	
 	std::istringstream sss(slopes);
 	char comma;
-	float slopeA, slopeB, zeroOff;
-	sss >> slopeA >> comma >> slopeB >> comma >> zeroOff;
-	
-	*slopeAcid = slopeA;
-	*slopeBase = slopeB;
-	*zeroOffset = zeroOff;
-	return;
+	sss >> slopeAcid >> comma >> slopeBase >> comma >> zeroOffset;	
 }
-void calibratePH() 
+
+float returnLastMean()
 {
+	return lastMean;
+}
+
+float returnslopeAcid()
+{
+	return slopeAcid;
+}
+
+float returnslopeBase()
+{
+	return slopeBase;
+}
+
+float returnzeroOffset()
+{
+	return zeroOffset;
+}
+
+bool calibrationTick(char point)
+{
+	if (!calibrationRunning)
+	{
+		return false; // the calibration is not running, so the display can show done
+	}
 	
+	bool didStabilize = false; // set to true when the readings stabilize on one number
 	
-	//three point calibration
+	//reading from the sensor and updating the circular buffer
+	circularBuffer[measurementCount % 16] = getpH(); //sensor read here
+	measurementCount++;
+	didStabilize = checkStabilization();
 	
-	//step 1 dry calibration: "cal,dry"
-	//step 2 "cal,mid,n"
-	//step 3 "cal,low,n"
-	//step 4 "cal,high,n"
+	if (didStabilize)
+	{
+		// finalize the calibration by telling the sensor that what it is reading right
+		wakeUpUartSensor(uart0);
+		performCalibration(point);
+		getValues();
+		// now should actually be ph4,7, or 10 by sending the calibration command.
+		calibrationRunning = false;
+		return false; // calibration just finished so the screen can say its done
+	}
+	return true; // calibration is still running so display should show as such
+}
+
+bool calibrationRunningEC = false;
+float circularBufferEC[16];
+int measurementCountEC; // for use with indexing the circular buffer, hint: % may be useful here
+float targetStDevEC = 30;
+
+float lastMeanEC;
+
+void startECCalibration(float stdDev)
+{
+	lastMeanEC = 0;
+	// do stuff to initialize calibration to prepare for loop body
+	for (int i = 0; i < 16; i++)
+	{
+		circularBufferEC[i] = i * 1000; // just an initial value that will cause it to have high
+							   // stddev so that it doesn't terminate the calibration early
+	}
+	measurementCountEC = 0;
+	calibrationRunningEC = true;
+	targetStDevEC = stdDev;
+}
+
+
+bool checkECStabilization()
+{
+	//sum the array
+	float sum = 0;
+	for (int i = 0; i < 16; i++) {
+		sum += circularBufferEC[i];
+	}
+	// calculating mean
+	float mean = sum / 16;
 	
+	float values = 0;
+	for (int i = 0; i < 16; i++) {
+		values += pow(circularBufferEC[i] - mean, 2);
+	}
+	// variance is the square of standard deviation
+	float variance = values / 16;
+	float standardDeviation = sqrt(variance);
+	
+	if (standardDeviation > targetStDevEC)
+	{
+		return false;
+	}
+	lastMeanEC = mean;
+	return true;
+}
+
+float getEClastMean()
+{
+	return lastMeanEC;
+}
+bool calibrationECTick(char point)
+{
+	if (!calibrationRunningEC)
+	{
+		return false; // the calibration is not running, so the display can show done
+	}
+	
+	bool didStabilize = false; // set to true when the readings stabilize on one number
+	
+	//reading from the sensor and updating the circular buffer
+	circularBufferEC[measurementCountEC % 16] = getEC(); //sensor read here
+	measurementCountEC++;
+	didStabilize = checkECStabilization();
+	
+	if (didStabilize)
+	{
+		// finalize the calibration by telling the sensor that what it is reading right
+		while (uart_is_readable(uart1))
+		{
+			uart_getc(uart1);
+		}
+		performECCalibration(point);
+		calibrationRunningEC = false;
+		return false; // calibration just finished so the screen can say its done
+	}
+	return true; // calibration is still running so display should show as such
 }
 
 void wakeUpUartSensor(uart_inst_t* uart)
@@ -244,7 +428,50 @@ float getSingleUART(bool pH = 1)
 
 float getWaterLevel()
 {
-	return 0.0f;
+	float seriesResistor = 1000; //Change if the hardware setup is changes
+	float Vcc = 5;
+	const float convFactor = 3.3f / (1 << 12); // 12-bit conversion, assume max value == ADC_VREF == 3.3 V
+	const float expectedRef = 1500;
+
+	adc_select_input(2); //Select an ADC input. 0...3 are GPIOs 26...29 respectively.
+	float sensorRead = 0; 
+	for (int i = 0; 100 > i; i++)
+	{
+		uint16_t resultSense = adc_read();
+		sensorRead += resultSense * convFactor;
+		busy_wait_us(10);
+	}
+	sensorRead /= 100;
+	
+	adc_select_input(1); //Select an ADC input. 0...3 are GPIOs 26...29 respectively.
+	float refRead = 0;
+	for (int i = 0; 100 > i; i++)
+	{
+		uint16_t resultRef = adc_read();
+		refRead += resultRef * convFactor; 
+		;
+		busy_wait_us(10);
+	}
+	refRead /= 100;
+
+	//Vread = Vin * (Rsensor / Rsensor + series)
+	// Rsensor = (Rseries * Vread) / (Vread - Vin)
+	
+	float refResistor = (seriesResistor * refRead) / (Vcc - refRead);
+	float sensorResistor = (seriesResistor * sensorRead) / (Vcc - sensorRead);
+	
+	float offset = refResistor / 1500;
+	
+	float x1 = 1500 * offset;
+	//x1 = x1 * (1 + offsetPerc);
+	//x1 = refResistor;
+	
+	//two point form equation: y - y1 = ((y2 - y1) / (x2- x1)) * (x - x1)
+	//  y - y1 = ((y2 - y1) / (x2- x1)) * (x - x1)
+	//P1: (1500 - offset, 1)
+	//P2: (1100, 8)
+	float result = (((8 - 1) / (400 * offset - x1)) * (sensorResistor - x1)) + 1;
+	return result;
 }
 
 float getPumpRate()
@@ -252,9 +479,46 @@ float getPumpRate()
 	return pumpRate;
 }
 
+
+void initLightSensor()
+{
+	int8_t setMedGain = 0b00000001;
+	uint8_t buf[2];
+	buf[0] = 0x14; // register for configuring the gain
+	buf[1] = setMedGain;
+	
+	//config the gain
+	//7 sreset - 0 
+	//6 reserverd - 0
+	//54 again - 00 low gain 01 medium gain 10 high gain 11 max high gain mode
+	//3 reserved - 0 
+	//2:0 integration time - 000 36k 001 and rest full range
+
+	if (i2c_write_blocking(i2c0, 0x29, buf, 2, false) == PICO_ERROR_GENERIC)
+	{
+		//an error occured while attempting to communicate with the device.
+		printf("could not communicate with the light  sensor.\n");
+	}
+}
 float getLightLevel()
 {
-	return 0.0f;
+	const float ResponsivityPerCount = 264.1;
+	
+	uint8_t buf[2];
+	buf[0] = 0x14;
+	if (i2c_write_blocking(i2c0, 0x29, buf, 1, true) != PICO_ERROR_NONE)
+	{
+		return 0;
+	}
+	//Channel 0 reading
+	if (i2c_read_blocking(i2c0, 0x29, buf, 2, false) != PICO_ERROR_NONE) {
+		//an error occured while attempting to communicate with the device.
+		//reporterror("could not communicate with the air quality sensor.");
+		return 0;
+	}
+	
+	return ((buf[0] << 8) | buf[1]) * ResponsivityPerCount;
+	
 }
 
 float getAirTemp()
@@ -371,17 +635,20 @@ float getAirCO2()
 void initSensors()
 {
 
-	//air sensor readings
+	//air and light sensor readings
 	i2c_init(i2c0, 50000);
 	gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);
 	gpio_set_function(I2C_SCL, GPIO_FUNC_I2C);
-
-	//light sensor readings
-	//i2c_init(isc1, 50000); //TO DO check baudrate i2c1
-	//gpio_set_function(TODO , GPIO_FUNC_I2C);
-	//gpio_set_function(TODO, GPIO_FUNC_I2C);
-
-
+	initLightSensor();
+	
+	//init analog readings 
+	adc_init(); //init ADC HW
+	adc_gpio_init(LEVEL_SENSOR); //pin 28 initialized
+	adc_gpio_init(LEVEL_COMPENSATION); //pin 27 initialized
+	
+	
+	//LEVEL_COMPENSATION 27 //ADC1??
+	
 	//initialize UART for pH readings
     uart_init(uart0, 9600); //default rate for ezo_PH
 	//UART - 0 is TX, 1 is RX
