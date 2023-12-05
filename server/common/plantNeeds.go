@@ -1,6 +1,9 @@
 package common
 
-import "math"
+import (
+	"math"
+	"sort"
+)
 
 type plantNeedEntry struct {
 	low   float64
@@ -92,4 +95,46 @@ func GetTargetLightHoursRange() (float64, float64) {
 	}
 
 	return computeTargetRange(entries)
+}
+
+func convertMinutesToHoursMins(minutes int) int {
+	return minutes/60*100 + minutes%60
+}
+
+func GetSchedule() (ret Schedule) {
+	// pump
+	for i := 0; i < GetConfig().SystemConfig.PumpOnCount; i++ {
+		ret.Schedule = append(ret.Schedule, ScheduleEntry{
+			EventType: "PUMP_ON",
+			EventTime: convertMinutesToHoursMins((i + 1) * 24 * 60 / (GetConfig().SystemConfig.PumpOnCount + 1)),
+		})
+		ret.Schedule = append(ret.Schedule, ScheduleEntry{
+			EventType: "PUMP_OFF",
+			EventTime: convertMinutesToHoursMins((i+1)*24*60/(GetConfig().SystemConfig.PumpOnCount+1) + GetConfig().SystemConfig.PumpOnTime),
+		})
+	}
+
+	// light
+	lightLow, lightHigh := GetTargetLightHoursRange()
+	targetLight := (lightLow + lightHigh) / 2.0
+
+	lightOn := (24 - targetLight) / 2.0
+	lightOff := lightOn + targetLight
+
+	ret.Schedule = append(ret.Schedule, ScheduleEntry{
+		EventType: "LIGHT_ON",
+		EventTime: convertMinutesToHoursMins(int(lightOn * 60)),
+	})
+
+	ret.Schedule = append(ret.Schedule, ScheduleEntry{
+		EventType: "LIGHT_OFF",
+		EventTime: convertMinutesToHoursMins(int(lightOff * 60)),
+	})
+
+	// sorting the schedule from earliest to latest
+	sort.Slice(ret.Schedule, func(i, j int) bool {
+		return ret.Schedule[i].EventTime < ret.Schedule[j].EventTime
+	})
+
+	return
 }

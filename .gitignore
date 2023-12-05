@@ -1,2 +1,4 @@
 
 *.opendb
+server/config.yaml
+server/config-backup.yaml

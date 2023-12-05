@@ -1,6 +1,7 @@
 #include "sensors.h"
 #include "hardware/i2c.h"
 #include "hardware/gpio.h"
+#include "pico/mutex.h"
 #include "hardwareSetup.h"
 #include <stdint.h>
 #include "communication.h"
@@ -10,6 +11,8 @@
 #include <cmath> /*pow */
 #include <iostream>
 #include <sstream>
+
+mutex_t sensorMutex;
 
 float lastPH = 0.0f;
 
@@ -49,11 +52,15 @@ uint8_t gencrc(uint8_t *data, size_t len)
 
 float getpH()
 {
-	return getSingleUART(1);
+	mutex_enter_blocking(&sensorMutex);
+	float ph = getSingleUART(1);
+	mutex_exit(&sensorMutex);
+	return ph;
 }
 
 float getEC() 
 {
+	mutex_enter_blocking(&sensorMutex);
 	float ret = 0;
 	for (int i = 0; 10 > i && ret == 0; i++)
 	{
@@ -63,6 +70,7 @@ float getEC()
 		}
 		ret = getSingleUART(0);
 	}
+	mutex_exit(&sensorMutex);
 	return ret;
 }
 
@@ -113,6 +121,8 @@ bool checkStabilization()
 
 void performCalibration(char p)
 {
+	mutex_enter_blocking(&sensorMutex);
+	wakeUpUartSensor(uart0);
 	char c = 0;
 	if (p == 'm')
 	{
@@ -134,10 +144,17 @@ void performCalibration(char p)
 	{
 		c = uart_getc(uart0);
 	}
+	mutex_exit(&sensorMutex);
 }
 
 void performECCalibration(char p)
 {
+	mutex_enter_blocking(&sensorMutex);
+	while (uart_is_readable(uart1))
+	{
+		uart_getc(uart1);
+	}
+	
 	char c = 0;
 	if (p == 'l')
 	{
@@ -159,10 +176,12 @@ void performECCalibration(char p)
 	{
 		c = uart_getc(uart1);
 	}
+	mutex_exit(&sensorMutex);
 }
 
 void getValues()
 {
+	mutex_enter_blocking(&sensorMutex);
 	// now the readings are stabilized
 	uart_puts(uart0, "Slope,?\r");
 	//example response 
@@ -196,7 +215,8 @@ void getValues()
 	
 	std::istringstream sss(slopes);
 	char comma;
-	sss >> slopeAcid >> comma >> slopeBase >> comma >> zeroOffset;	
+	sss >> slopeAcid >> comma >> slopeBase >> comma >> zeroOffset;
+	mutex_exit(&sensorMutex);
 }
 
 float returnLastMean()
@@ -236,7 +256,6 @@ bool calibrationTick(char point)
 	if (didStabilize)
 	{
 		// finalize the calibration by telling the sensor that what it is reading right
-		wakeUpUartSensor(uart0);
 		performCalibration(point);
 		getValues();
 		// now should actually be ph4,7, or 10 by sending the calibration command.
@@ -315,10 +334,6 @@ bool calibrationECTick(char point)
 	if (didStabilize)
 	{
 		// finalize the calibration by telling the sensor that what it is reading right
-		while (uart_is_readable(uart1))
-		{
-			uart_getc(uart1);
-		}
 		performECCalibration(point);
 		calibrationRunningEC = false;
 		return false; // calibration just finished so the screen can say its done
@@ -428,6 +443,7 @@ float getSingleUART(bool pH = 1)
 
 float getWaterLevel()
 {
+	mutex_enter_blocking(&sensorMutex);
 	float seriesResistor = 1000; //Change if the hardware setup is changes
 	float Vcc = 5;
 	const float convFactor = 3.3f / (1 << 12); // 12-bit conversion, assume max value == ADC_VREF == 3.3 V
@@ -471,6 +487,7 @@ float getWaterLevel()
 	//P1: (1500 - offset, 1)
 	//P2: (1100, 8)
 	float result = (((8 - 1) / (400 * offset - x1)) * (sensorResistor - x1)) + 1;
+	mutex_exit(&sensorMutex);
 	return result;
 }
 
@@ -479,12 +496,20 @@ float getPumpRate()
 	return pumpRate;
 }
 
+uint8_t lightSensorCommand(uint8_t normalCommand)
+{
+	return 0b10100000 | normalCommand;
+}
 
 void initLightSensor()
 {
 	int8_t setMedGain = 0b00000001;
 	uint8_t buf[2];
-	buf[0] = 0x14; // register for configuring the gain
+	buf[0] = lightSensorCommand(0x00);
+	buf[1] = 0x3;
+	i2c_write_blocking(i2c0, 0x29, buf, 2, false);
+	
+	buf[0] = lightSensorCommand(0x1); // register for configuring the gain
 	buf[1] = setMedGain;
 	
 	//config the gain
@@ -494,44 +519,45 @@ void initLightSensor()
 	//3 reserved - 0 
 	//2:0 integration time - 000 36k 001 and rest full range
 
-	if (i2c_write_blocking(i2c0, 0x29, buf, 2, false) == PICO_ERROR_GENERIC)
-	{
-		//an error occured while attempting to communicate with the device.
-		printf("could not communicate with the light  sensor.\n");
-	}
+	i2c_write_blocking(i2c0, 0x29, buf, 2, false);
 }
 float getLightLevel()
 {
-	const float ResponsivityPerCount = 264.1;
+	mutex_enter_blocking(&sensorMutex);
+	const float countsPeruW = 264.1 / 24.5;
 	
 	uint8_t buf[2];
-	buf[0] = 0x14;
-	if (i2c_write_blocking(i2c0, 0x29, buf, 1, true) != PICO_ERROR_NONE)
-	{
-		return 0;
-	}
+	buf[0] = lightSensorCommand(0x14);
+	i2c_write_blocking(i2c0, 0x29, buf, 1, false);
+	busy_wait_us(100);
 	//Channel 0 reading
-	if (i2c_read_blocking(i2c0, 0x29, buf, 2, false) != PICO_ERROR_NONE) {
-		//an error occured while attempting to communicate with the device.
-		//reporterror("could not communicate with the air quality sensor.");
-		return 0;
-	}
+	i2c_read_blocking(i2c0, 0x29, buf, 1, false);
 	
-	return ((buf[0] << 8) | buf[1]) * ResponsivityPerCount;
+	buf[1] = lightSensorCommand(0x15);
+	i2c_write_blocking(i2c0, 0x29, &buf[1], 1, false);
+	busy_wait_us(100);
+	//Channel 0 reading
+	i2c_read_blocking(i2c0, 0x29, &buf[1], 1, false);
+	mutex_exit(&sensorMutex);
+	
+	return (((uint16_t)buf[0] << 8) | buf[1]) / countsPeruW;
 	
 }
 
 float getAirTemp()
 {
+	mutex_enter_blocking(&sensorMutex);
 	uint16_t ready = airSensorRead(0x0202);
 	
 	if (ready != 1)
 	{
+		mutex_exit(&sensorMutex);
 		return lastTemp;
 	}
 	
 	uint8_t buf[18];
 	airSensorReadMultiple(0x0300, buf, 18);
+	mutex_exit(&sensorMutex);
 	
 	uint8_t temp[4];
 	temp[0] = buf[4];
@@ -560,15 +586,18 @@ float getAirTemp()
 
 float getAirHumidity()
 {
+	mutex_enter_blocking(&sensorMutex);
 	uint16_t ready = airSensorRead(0x0202);
 	
 	if (ready != 1)
 	{
+		mutex_exit(&sensorMutex);
 		return lastHumidity;
 	}
 	
 	uint8_t buf[18];
 	airSensorReadMultiple(0x0300, buf, 18);
+	mutex_exit(&sensorMutex);
 	
 	uint8_t temp[4];
 	temp[0] = buf[4];
@@ -597,15 +626,18 @@ float getAirHumidity()
 
 float getAirCO2()
 {
+	mutex_enter_blocking(&sensorMutex);
 	uint16_t ready = airSensorRead(0x0202);
 	
 	if (ready != 1)
 	{
+		mutex_exit(&sensorMutex);
 		return lastCO2PPM;
 	}
 	
 	uint8_t buf[18];
 	airSensorReadMultiple(0x0300, buf, 18);
+	mutex_exit(&sensorMutex);
 	
 	uint8_t temp[4];
 	temp[0] = buf[4];
@@ -634,6 +666,7 @@ float getAirCO2()
 
 void initSensors()
 {
+	mutex_init(&sensorMutex);
 
 	//air and light sensor readings
 	i2c_init(i2c0, 50000);

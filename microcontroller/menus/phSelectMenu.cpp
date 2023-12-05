@@ -35,9 +35,9 @@ void highpointCalib()
 Place probe in the
 Solution and click 
 an option below
-1 – mid point (7.0)
-2 – low point (4.0) 
-3 – high point (10.0)
+1 â€“ mid point (7.0)
+2 â€“ low point (4.0) 
+3 â€“ high point (10.0)
 GO BACK TO NAV
 */
 MenuItem phSelectItems[] = { 

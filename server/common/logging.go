@@ -6,6 +6,7 @@ import (
 )
 
 const (
+	SeverityFatal   = "FATAL"
 	SeverityError   = "ERROR"
 	SeverityWarning = "WARNING"
 	SeverityInfo    = "INFO"

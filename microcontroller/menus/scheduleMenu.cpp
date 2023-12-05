@@ -13,8 +13,8 @@ void goBackNavSelected()
 
 MenuItem test[20];
 
-void initializeScheduleMenu()
-{	
+void updateScheduleMenuItems()
+{
 	std::list <gardenEvent>scheduleList = getAllSchedule(); 
 	int size = scheduleList.size();
 	int index = 0;
@@ -45,8 +45,16 @@ void initializeScheduleMenu()
 		test[index] = MenuItem(label, goBackNavSelected);
 		++index;
 	}
-	
-	_scheduleMenu = new Menu("SCHEDULE", test, size);
+	for (; index < 20; index++)
+	{
+		test[index] = MenuItem();
+	}
+}
+
+void initializeScheduleMenu()
+{	
+	updateScheduleMenuItems();
+	_scheduleMenu = new Menu("SCHEDULE", test, 20);
 }
 
 void switchToScheduleMenu() 
