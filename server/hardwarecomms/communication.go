@@ -26,10 +26,10 @@ type commandError struct {
 }
 
 type commandResponse struct {
-	JsonRPC string       `json:"jsonrpc"`
-	Result  interface{}  `json:"result"`
-	Error   commandError `json:"error"`
-	ID      int64        `json:"id"`
+	JsonRPC string          `json:"jsonrpc"`
+	Result  json.RawMessage `json:"result"`
+	Error   commandError    `json:"error"`
+	ID      int64           `json:"id"`
 }
 
 type notification struct {
@@ -59,7 +59,7 @@ type acknoledgement struct {
 }
 
 // notification structs
-type logNotification struct {
+type LogNotification struct {
 	Severity    string `json:"severity"`
 	Message     string `json:"message"`
 	MessageType string `json:"message_type"`
@@ -72,6 +72,7 @@ type HardwareComms struct {
 	idCounter           int64
 	idChanMap           map[int64]chan commandResponse
 	NotificationHandler func(string, interface{})
+	ReconnectHandler    func()
 	commName            string
 }
 
@@ -119,6 +120,9 @@ func (hc *HardwareComms) testAndTryToReconnect() bool {
 			return false
 		}
 		hc.serialPort = port
+		if hc.ReconnectHandler != nil {
+			go hc.ReconnectHandler() // must be in a goroutine to avoid deadlock
+		}
 	}
 
 	return true
@@ -127,6 +131,7 @@ func (hc *HardwareComms) testAndTryToReconnect() bool {
 func (hc *HardwareComms) readConn() {
 
 	buildingBuf := make([]byte, 1024)
+	trueLength := 0
 	for hc.serialPort != nil {
 		// read the response
 		n, e := hc.serialPort.Read(buildingBuf[len(buildingBuf)-1024:])
@@ -134,7 +139,7 @@ func (hc *HardwareComms) readConn() {
 			// try to reconnect
 			if !hc.testAndTryToReconnect() {
 				// if we can't reconnect, send a notification
-				logEntry := logNotification{
+				logEntry := LogNotification{
 					Severity:    "ERROR",
 					Message:     "Error reading from hardware: " + e.Error(),
 					MessageType: "COMMUNICATION_FAILURE",
@@ -150,10 +155,11 @@ func (hc *HardwareComms) readConn() {
 			continue
 		}
 
-		buildingBuf = buildingBuf[:n]
+		trueLength += n
+		buildingBuf = buildingBuf[:trueLength]
 
 		n = 0
-		for i, v := range buildingBuf[:n] {
+		for i, v := range buildingBuf {
 			if v == '\n' {
 				n = i
 				break
@@ -170,6 +176,7 @@ func (hc *HardwareComms) readConn() {
 		var r commandResponse
 		e = json.Unmarshal(buildingBuf[:n], &r)
 		buildingBuf = make([]byte, 1024)
+		trueLength = 0
 
 		if e == nil && r.ID != 0 {
 			// send the response to the waiting goroutine
@@ -193,7 +200,7 @@ func (hc *HardwareComms) readConn() {
 		}
 
 		// if we got here, we have an error
-		logEntry := logNotification{
+		logEntry := LogNotification{
 			Severity:    "ERROR",
 			Message:     "Error parsing response from hardware: " + string(buildingBuf[:n]),
 			MessageType: "COMMUNICATION_FAILURE",
@@ -208,7 +215,7 @@ func (hc *HardwareComms) readConn() {
 /**
  * Sends a command to the hardware and returns the response
  */
-func (hc *HardwareComms) sendCommand(cmd string, payload interface{}) (interface{}, error) {
+func (hc *HardwareComms) sendCommand(cmd string, payload interface{}) (json.RawMessage, error) {
 	// json serializing the payload
 	c := command{
 		JsonRPC: "2.0",
@@ -246,7 +253,7 @@ func (hc *HardwareComms) sendCommand(cmd string, payload interface{}) (interface
 		}
 
 		return r.Result, nil
-	case <-time.After(5 * time.Second):
+	case <-time.After(30 * time.Second):
 		return nil, errors.New("TIMEOUT: timeout sending command " + cmd + " to hardware.")
 	}
 }

@@ -32,6 +32,8 @@ type SystemConfiguration struct {
 	// configuration
 	PlantConfigs []PlantConfiguration `yaml:"plant_configs" json:"plant_configs"`
 	PlantHolders []PlantHolder        `yaml:"plant_holders" json:"plant_holders"`
+	PumpOnTime   int                  `yaml:"pump_on_time" json:"pump_on_time"`   // in minutes
+	PumpOnCount  int                  `yaml:"pump_on_count" json:"pump_on_count"` // the number of times in one day to turn the pump on
 
 	// thresholds
 	WaterLeakAmount           float64 `yaml:"water_leak_amount" json:"water_leak_amount"`                     // threshold for water leak detection, in mL/min
@@ -46,7 +48,7 @@ type SystemConfiguration struct {
 	MaximumAirHumidity        float64 `yaml:"maximum_air_humidity" json:"maximum_air_humidity"`               // in %
 	PHMaximumDeviation        float64 `yaml:"ph_maximum_deviation" json:"ph_maximum_deviation"`               // in pH
 	ECMaximumDeviation        float64 `yaml:"ec_maximum_deviation" json:"ec_maximum_deviation"`               // in mS/cm
-	LightMaximumDeviation     float64 `yaml:"light_maximum_deviation" json:"light_maximum_deviation"`         // in lux
+	LightMaximumDeviation     float64 `yaml:"light_maximum_deviation" json:"light_maximum_deviation"`         // in hours
 
 	// physical specifications
 	TankUsableVolume float64 `yaml:"tank_usable_volume" json:"tank_usable_volume"` // in L

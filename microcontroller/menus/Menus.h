@@ -20,6 +20,8 @@ void initializeScheduleMenu();
 
 void switchToScheduleMenu();
 
+void updateScheduleMenuItems();
+
 void initializephSelectMenu();
 
 void switchToPhSelectMenu();

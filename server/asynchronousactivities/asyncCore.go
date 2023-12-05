@@ -2,6 +2,7 @@ package asynchronousactivities
 
 import (
 	"errors"
+	"strings"
 	"sync"
 	"time"
 
@@ -19,6 +20,10 @@ var listeners []chan common.SensorReadings
 func RunAsyncActivities(comms *hardwarecomms.HardwareComms) {
 	commMutex.Lock()
 	comm = comms
+	comm.SetTime(time.Now())
+	comm.SetSchedule(common.GetSchedule())
+	comm.ReconnectHandler = onReconnect
+	comm.NotificationHandler = onNotification
 	commMutex.Unlock()
 
 	var err error
@@ -33,7 +38,10 @@ func RunAsyncActivities(comms *hardwarecomms.HardwareComms) {
 		} else {
 			// save to database, perform analysis, and update listeners
 			performAnalysis(lastSensorReadings)
-			common.AddSensorReadings(lastSensorReadings)
+			err := common.AddSensorReadings(lastSensorReadings)
+			if err != nil {
+				common.LogF(common.SeverityError, "Error saving sensor readings to database: %v", err)
+			}
 			listenerMutex.Lock()
 			for _, listener := range listeners {
 				listener <- lastSensorReadings
@@ -51,6 +59,22 @@ func RunAsyncActivities(comms *hardwarecomms.HardwareComms) {
 		}
 
 		time.Sleep(1 * time.Minute)
+	}
+}
+
+func onReconnect() {
+	commMutex.Lock()
+	comm.SetTime(time.Now())
+	comm.SetSchedule(common.GetSchedule())
+	commMutex.Unlock()
+}
+
+func onNotification(messageType string, message interface{}) {
+	if messageType == "event/log" {
+		logEntry, ok := message.(hardwarecomms.LogNotification)
+		if ok {
+			common.LogF(strings.ToUpper(logEntry.Severity), logEntry.Message)
+		}
 	}
 }
 

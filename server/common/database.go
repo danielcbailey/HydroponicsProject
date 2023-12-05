@@ -2,7 +2,10 @@ package common
 
 import (
 	"database/sql"
+	"errors"
 	"time"
+
+	_ "github.com/ClickHouse/clickhouse-go"
 )
 
 var db *sql.DB
@@ -38,7 +41,11 @@ var SensorMeasurementNames = sensorMeasurementNames{
 }
 
 func AddSensorReadings(readings SensorReadings) error {
-	_, err := db.Exec(
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(
 		"INSERT INTO sensor_readings (time, air_temp, air_rel_humidity, air_co2, water_level, water_flow, water_acc_flow, light_level, ph, electrical_conductivity) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		time.Now(),
 		readings.AirTemperature,
@@ -52,11 +59,17 @@ func AddSensorReadings(readings SensorReadings) error {
 		readings.ElectricalConductivity,
 	)
 
+	if err != nil {
+		tx.Rollback()
+	} else {
+		err = tx.Commit()
+	}
+
 	return err
 }
 
 func GetPastSensorMeasurements(measurement string, timeRange time.Duration) ([]SensorMeasurement, error) {
-	rows, err := db.Query("SELECT time, ? FROM sensor_readings WHERE time > ? ORDER BY time DESC", measurement, time.Now().Add(-timeRange))
+	rows, err := db.Query("SELECT time, "+measurement+" FROM sensor_readings WHERE time > ? ORDER BY time DESC", time.Now().Add(-timeRange).Unix())
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +91,19 @@ func GetPastSensorMeasurements(measurement string, timeRange time.Duration) ([]S
 }
 
 func GetPastSensorMeasurementsWithResolution(measurement string, timeRange time.Duration, resolution time.Duration) ([]SensorMeasurement, error) {
-	rows, err := db.Query("SELECT toStartOfInterval(time, INTERVAL ? MINUTE) AS iTime, avg(?) AS iValue FROM sensor_readings WHERE time > ? GROUP BY iTime ORDER BY iTime DESC", resolution.Minutes(), measurement, time.Now().Add(-timeRange))
+	// if measurement contains characters other than a-z, A-Z, 0-9, and _, should error
+	valid := true
+	for _, c := range measurement {
+		if !(c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '_') {
+			valid = false
+			break
+		}
+	}
+	if !valid {
+		return nil, errors.New("invalid measurement name")
+	}
+
+	rows, err := db.Query("SELECT toStartOfInterval(time, INTERVAL ? MINUTE) AS iTime, avg("+measurement+") AS iValue FROM sensor_readings WHERE time > timestamp(?) GROUP BY iTime ORDER BY iTime DESC", resolution.Minutes(), time.Now().Add(-timeRange).Unix())
 	if err != nil {
 		return nil, err
 	}

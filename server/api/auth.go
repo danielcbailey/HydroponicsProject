@@ -14,6 +14,10 @@ import (
 var authMutex sync.Mutex
 var tokens map[string]bool
 
+func initAuth() {
+	tokens = make(map[string]bool)
+}
+
 func checkAuth(w http.ResponseWriter, r *http.Request) bool {
 	token := r.Header.Get("Authorization")
 	if token == "" {

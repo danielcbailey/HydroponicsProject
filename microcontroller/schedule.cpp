@@ -2,6 +2,7 @@
 #include "stdio.h"
 #include <iostream>
 #include <list>
+#include "menus/Menus.h"
 
 
 //initialize the schedule to a default before server sends another schedule to update 
@@ -84,6 +85,7 @@ currState getStateAtTime(datetime_t currTime) //If after updating the schedule a
 bool updateSchedule(std::list <gardenEvent>newEvents)
 {
 	gardenSchedule = newEvents;
+	updateScheduleMenuItems();
 	return true;
 }
 
