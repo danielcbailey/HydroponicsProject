@@ -6,18 +6,19 @@ The main page displays crucial information to the user. Firstly, it indicates "C
 
 The page also features two essential sensor readings: Water level and Temperature. Monitoring these readings is imperative to ensure the safety and functionality of the system.
 
-![PXL_20231205_201223478](https://github.com/danielcbailey/HydroponicsProject/assets/32362546/3740eab4-01f4-4710-aee2-7ce9ea7cf673) ![PXL_20231205_212641890](https://github.com/danielcbailey/HydroponicsProject/assets/32362546/3fc9fdbc-b1d9-4c62-b719-c927d7ff0ed6)
-
+![PXL_20231205_201223478](https://github.com/danielcbailey/HydroponicsProject/assets/32362546/3740eab4-01f4-4710-aee2-7ce9ea7cf673) 
 Figure 1. Main page when pico boots up before the Pi connects to it
 
+![PXL_20231205_212641890](https://github.com/danielcbailey/HydroponicsProject/assets/32362546/3fc9fdbc-b1d9-4c62-b719-c927d7ff0ed6)
 Figure 2. Main page after Pi connects to the pico and updates time and schedule.
-
 
 ## Navigation Menu
 From the main page, users can press the rotary encoder knob to access the navigation menu. This menu contains various manual actions that users can perform to monitor both plants and the system as needed.
 
 ![WhatsApp Image 2023-12-06 at 10 25 18 AM (1)](https://github.com/danielcbailey/HydroponicsProject/assets/32362546/f0b7e7eb-6f74-46d9-91c3-c288790a53d7)
 Figure 3. Navigation Menu 
+
+
 
 
 -- check below 
