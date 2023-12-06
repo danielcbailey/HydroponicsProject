@@ -60,5 +60,19 @@ Figure 9. MID-POINT Calibration Page after the calibration is successfully perfo
 
 ## 5. EC Calibration
 
+The calibration processes are detailed in the datasheet, which can be found on this page:  
+Similar to the pH sensor, the Atlas Scientific EC sensor requires a 3-point calibration process. The calibration points include a dry calibration with no solution, a 12880 uS solution, and an 80000 uS solution
+
+The EC Calibration menu displays these three selections corresponding to the calibration solutions. The menu functions similarly to the pH menu. The user first selects "1 - Dry (NO SOL)" when the sensor is not in any liquid. The system then waits for stabilization and sends the calibration command to the EC sensor via UART.
+The calibration processes are detailed in the datasheet, available on this page: https://atlas-scientific.com/kits/conductivity-k-1-0-kit/
+
+![WhatsApp Image 2023-12-06 at 10 25 18 AM (5)](https://github.com/danielcbailey/HydroponicsProject/assets/32362546/c3ea2b3a-7e90-419d-be6f-6aaed722dde8)
+Figure 10. EC Calibration Selection Menu 
+
+TO DO 
+Figure 11. Dry Calibration Page during the calibration 
+
+TO DO 
+Figure 12. Dry Calibration Page after the calibration is successfully performed 
 
 
