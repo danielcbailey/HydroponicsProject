@@ -12,6 +12,10 @@ Figure 1. Main page when pico boots up before the Pi connects to it
 ![PXL_20231205_212641890](https://github.com/danielcbailey/HydroponicsProject/assets/32362546/3fc9fdbc-b1d9-4c62-b719-c927d7ff0ed6)
 Figure 2. Main page after Pi connects to the pico and updates time and schedule.
 
+![Elements](https://github.com/danielcbailey/HydroponicsProject/assets/32362546/3740eab4-01f4-4710-aee2-7ce9ea7cf673){: style="height:83px"}
+![Dandi](https://github.com/danielcbailey/HydroponicsProject/assets/32362546/3fc9fdbc-b1d9-4c62-b719-c927d7ff0ed6){: style="height:83px"}
+
+
 ## Navigation Menu
 From the main page, users can press the rotary encoder knob to access the navigation menu. This menu contains various manual actions that users can perform to monitor both plants and the system as needed.
 
