@@ -18,17 +18,32 @@ From the main page, users can press the rotary encoder knob to access the naviga
 ![WhatsApp Image 2023-12-06 at 10 25 18 AM (1)](https://github.com/danielcbailey/HydroponicsProject/assets/32362546/f0b7e7eb-6f74-46d9-91c3-c288790a53d7)
 Figure 3. Navigation Menu 
 
-
-
-
--- check below 
-## Sensor Readings
+## 1. Sensor Readings
 
 Sensor readings page display all of the readings from the sensors. There isn't any action that a user can perform from this page. The readings are updated real time. They can be used for plant monitoring purposes. For example, if the pH value has changed this might indicate that the concentration of the nutrient solution went down in the pipes. 
 
-## Light and Pump Control
+The Sensor Readings page displays all readings from the sensors. There are no user actions available on this page; the readings are updated in real-time. They serve the purpose of plant monitoring. For instance, a change in pH value indicates a decrease in nutrient solution concentration within the pipes.
 
-LED light and water pump are connected to 120 AC via relays. So it is safety critical that user is able to turn on and off the outputs manually anytime. User can turn on and off the lights and the water pump independently. To prevent a fire hazard, when the user selects to turn on the lights, the system will check the air temperature. If the temperature is higher than the maximum temperature value of the system, the lights will not turn on. Similarly, when the user wants to turn on the pumps, the system checks the water level sensor readings. If the value is lower than a minimum water level limit, the pumps will not turn on. This prevents the water pump from being water deprived and getting damaged. 
+![WhatsApp Image 2023-12-06 at 10 25 18 AM (2)](https://github.com/danielcbailey/HydroponicsProject/assets/32362546/f5908045-bf56-4d98-8b77-16f9a8776840)
+Figure 4. Sensor Readings Page showing temperature, humidity, CO2, pH, electrical conductivity, water level in inches, and light intensity in lumen.
+
+
+## 2. Light and Pump Control
+
+The LED light and water pump are connected to 120 AC via relays. Therefore, it is crucial for the user to be able to manually control the on/off status of these outputs at any time. The user can independently activate or deactivate the lights and water pump. To mitigate the risk of fire hazards, the system checks the air temperature when the user attempts to turn on the lights. If the temperature exceeds the system's maximum value, the lights will not turn on. Similarly, when the user intends to turn on the pumps, the system examines the water level sensor readings. If the value is below a specified minimum water level limit, the pumps will not start, preventing water deprivation and potential damage to the pump.
+
+![WhatsApp Image 2023-12-06 at 10 25 18 AM (3)](https://github.com/danielcbailey/HydroponicsProject/assets/32362546/230de66d-0d1c-45fc-b8a8-cb8fbebf59c0)
+Figure 5. Manual Control Menu 
+
+## 3. Schedule Display
+
+This page displays all events from the latest schedule sent by the server. If the number of events exceeds the length of the LCD screen, user can rotate the knob to scroll through the schedule. However, it's important to note that the schedule cannot be modified from this page. Only the server has the capability to send a schedule to the Pico (refer to the server interaction document).
+
+to do add pic to a schedule menu 
+
+## 4. pH Calibration
+
+## 5. EC Calibration
 
 
 
