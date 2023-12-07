@@ -3,6 +3,9 @@
 #define MIN_WATER_LEVEL 2
 #define MAX_TEMPERATURE 90
 
+extern bool lightState;
+extern bool pumpState;
+
 void outputsInit(); //initialize the pins for pump and light
 
 bool setLight(bool on);

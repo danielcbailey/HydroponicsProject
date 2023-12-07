@@ -134,7 +134,8 @@ void sensorReader(cJSON* params, int reqID)
 	cJSON_AddNumberToObject(resultObj, "air_temperature", getAirTemp());
 	cJSON_AddNumberToObject(resultObj, "air_relative_humidity", getAirHumidity());
 	cJSON_AddNumberToObject(resultObj, "air_co2_ppm", (int)getAirCO2());
-	
+	cJSON_AddBoolToObject(resultObj, "light", lightState);
+	cJSON_AddBoolToObject(resultObj, "pump", pumpState);
 	
 	char* returnStr = cJSON_PrintUnformatted(resp);
 	printf("%s\n", returnStr);
@@ -194,7 +195,7 @@ std::unordered_map<std::string, commandHandler> commandHandlers = {
 	{"config/setschedule", scheduleHandler},
 	{"sensors/read", sensorReader},
 	{"controls/setpump", manualSetPump},
-	{"sensors/setlight", manualSetLight},	
+	{"controls/setlight", manualSetLight},	
 };
 
 void sendAck(int reqID) 
