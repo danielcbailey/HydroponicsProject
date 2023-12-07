@@ -14,6 +14,7 @@ import (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
 // returns 60 data points of the specified measurement
@@ -60,6 +61,15 @@ func handleDataWebsocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer ws.Close()
+
+	// sending a copy of the past data to the client
+	pastData := asynchronousactivities.GetLastSensorReadings()
+	err = ws.WriteJSON(pastData)
+	if err != nil {
+		common.LogF(common.SeverityError, "Error writing to websocket: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	listener := make(chan common.SensorReadings, 1)
 

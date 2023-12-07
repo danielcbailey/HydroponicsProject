@@ -30,7 +30,6 @@ func handleUpdateSettings(w http.ResponseWriter, r *http.Request) {
 	}
 
 	config := common.GetConfig()
-	settings.PlantConfigs = config.SystemConfig.PlantConfigs
 	settings.PlantHolders = config.SystemConfig.PlantHolders
 	config.SystemConfig = settings
 	err = common.SaveConfig()
