@@ -21,5 +21,9 @@ func AddRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/getWaterAdjustment", handleWaterAdjustment)
 	mux.HandleFunc("/api/getTargets", handleGetTargets)
 
+	// Controls
+	mux.HandleFunc("/api/togglePump", handleTogglePump)
+	mux.HandleFunc("/api/toggleLight", handleToggleLight)
+
 	initAuth()
 }

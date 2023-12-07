@@ -21,6 +21,8 @@ type SensorReadings struct {
 	AirTemperature         float64 `json:"air_temperature"`
 	AirRelativeHumidity    float64 `json:"air_relative_humidity"`
 	AirCO2PPM              float64 `json:"air_co2_ppm"`
+	LightOn                bool    `json:"light"`
+	PumpOn                 bool    `json:"pump"`
 }
 
 type SensorMeasurement struct {

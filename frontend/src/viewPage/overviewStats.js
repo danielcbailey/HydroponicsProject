@@ -1,7 +1,7 @@
 import React from 'react';
 import {addMetricsListener, getMetrics, removeMetricsListener} from "../metrics";
 import {MetricBlock} from "./metricBlock";
-import {reportInvalidToken} from "../util";
+import {httpPost, reportInvalidToken} from "../util";
 
 let metricsCollectionStyle = {
     display: 'flex',
@@ -77,9 +77,7 @@ export class OverviewStats extends React.Component {
                         value={this.state.metrics.pump ? "ON" : "OFF"}
                         unit={this.state.metrics.pump ? "Turn OFF" : "Turn ON"}
                         onClick={() => {
-                            fetch("/api/togglePump", {
-                                method: "POST",
-                            }).then((response) => {
+                            httpPost("/api/togglePump", "").then((response) => {
                                 if (response.status === 401) {
                                     // unauthorized
                                     reportInvalidToken();
@@ -93,9 +91,7 @@ export class OverviewStats extends React.Component {
                         value={this.state.metrics.light ? "ON" : "OFF"}
                         unit={this.state.metrics.light ? "Turn OFF" : "Turn ON"}
                         onClick={() => {
-                            fetch("/api/toggleLight", {
-                                method: "POST",
-                            }).then((response) => {
+                            httpPost("/api/toggleLight", "").then((response) => {
                                 if (response.status === 401) {
                                     // unauthorized
                                     reportInvalidToken();
