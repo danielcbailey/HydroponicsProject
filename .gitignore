@@ -2,3 +2,5 @@
 *.opendb
 server/config.yaml
 server/config-backup.yaml
+microcontroller/.visualgdb/CodeExplorer/NodeFlags.dat
+microcontroller/.vs/HydroponicsBox/v17/.suo

@@ -8,9 +8,6 @@ func AddRoutes(mux *http.ServeMux) {
 	// Configuration
 	mux.HandleFunc("/api/getConfig", handleGetConfig)
 	mux.HandleFunc("/api/updateSettings", handleUpdateSettings)
-	mux.HandleFunc("/api/addPlant", handleAddPlant)
-	mux.HandleFunc("/api/removePlant", handleRemovePlant)
-	mux.HandleFunc("/api/updatePlant", handleUpdatePlant)
 	mux.HandleFunc("/api/updatePlantHolder", handlePlantHolderUpdate)
 
 	// Data
@@ -22,6 +19,7 @@ func AddRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/getPHAdjustment", handleGetPHAdjustment)
 	mux.HandleFunc("/api/getECAdjustment", handleGetECAdjustment)
 	mux.HandleFunc("/api/getWaterAdjustment", handleWaterAdjustment)
+	mux.HandleFunc("/api/getTargets", handleGetTargets)
 
 	initAuth()
 }

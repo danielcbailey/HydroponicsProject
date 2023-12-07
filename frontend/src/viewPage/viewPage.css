@@ -1,0 +1,22 @@
+
+
+.navButton {
+    font-family: D-DIN-Bold, sans-serif;
+    font-size: 18px;
+    color: #989898;
+    margin: 0;
+    padding: 5px 10px;
+    border-radius: 4px;
+    display: block;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.selectedNavButton {
+    color: white !important;
+}
+
+.navButton:hover {
+    background-color: #1c1c1c;
+    color: white !important;
+}

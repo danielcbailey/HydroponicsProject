@@ -21,8 +21,11 @@ func initAuth() {
 func checkAuth(w http.ResponseWriter, r *http.Request) bool {
 	token := r.Header.Get("Authorization")
 	if token == "" {
-		w.WriteHeader(http.StatusUnauthorized)
-		return false
+		token = r.URL.Query().Get("token")
+		if token == "" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return false
+		}
 	}
 
 	authMutex.Lock()

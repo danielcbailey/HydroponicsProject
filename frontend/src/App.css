@@ -1,0 +1,71 @@
+
+body {
+    background-color: #101010;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Common Elements */
+h1 {
+    font-family: D-DIN-Bold, sans-serif;
+    font-size: 40px;
+    color: white;
+    margin: 0;
+}
+
+h2 {
+    font-family: D-DIN, sans-serif;
+    font-size: 30px;
+    color: white;
+    margin: 0;
+}
+
+.error-text {
+    font-family: D-DIN, sans-serif;
+    font-size: 18px;
+    color: #e33939;
+    margin: 0;
+}
+
+.body-text {
+    font-family: D-DIN, sans-serif;
+    font-size: 18px;
+    color: white;
+    margin: 0;
+}
+
+.bold-text {
+    font-family: D-DIN-Bold, sans-serif;
+    font-size: 18px;
+    color: white;
+    margin: 0;
+}
+
+.text-input {
+    font-family: D-DIN, sans-serif;
+    font-size: 20px;
+    color: white;
+    background-color: #1c1c1c;
+    border: 1px solid white;
+    padding: 10px;
+    outline: none;
+    margin: 0;
+}
+
+.solid-button {
+    font-family: D-DIN-Bold, sans-serif;
+    font-size: 20px;
+    color: black;
+    background-color: white;
+    border: 1px solid white;
+    padding: 10px 30px;
+    outline: none;
+    margin: 0;
+}
+
+.solid-button:hover {
+    cursor: pointer;
+    background-color: #d0d0d0;
+}
+
+

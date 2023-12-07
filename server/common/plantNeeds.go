@@ -22,6 +22,7 @@ func computeTargetRange(requirements []plantNeedEntry) (float64, float64) {
 	for _, requirement := range requirements {
 		reqMean := (requirement.low + requirement.high) / 2.0
 		reqVariance := math.Pow((requirement.low-reqMean)/-1.645, 2) // 1.645 is the z-score for 5% of the area under the curve
+		reqVariance *= math.Sqrt(float64(len(requirements)))         // to account for the fact the the multiplying reduces the variance
 
 		meanNumerator += float64(requirement.count) * reqMean / (2 * reqVariance)
 		meanDenominator += float64(requirement.count) / (2 * reqVariance)

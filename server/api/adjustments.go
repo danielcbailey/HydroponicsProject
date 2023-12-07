@@ -15,6 +15,15 @@ type AdjustmentResponse struct {
 	WaterL     float64 `json:"water_l"`
 }
 
+type TargetsResponse struct {
+	ECMin    float64 `json:"ec_min"`
+	ECMax    float64 `json:"ec_max"`
+	PHMin    float64 `json:"ph_min"`
+	PHMax    float64 `json:"ph_max"`
+	LightMin float64 `json:"light_min"`
+	LightMax float64 `json:"light_max"`
+}
+
 // returns the amount of liters of water in the tank
 func getTankWaterVolume() float64 {
 	return asynchronousactivities.GetLastSensorReadings().WaterLevel * common.GetConfig().SystemConfig.TankTotalVolume / 8
@@ -32,7 +41,10 @@ func handleGetPHAdjustment(w http.ResponseWriter, r *http.Request) {
 	deltaPH := (upperTarget+lowerTarget)/2 - reading.PH
 	response := AdjustmentResponse{}
 
-	if deltaPH > 0 {
+	if reading.WaterLevel == 0 {
+		// instrumentation error, can't adjust pH
+		response.PHUpML = 0
+	} else if deltaPH > 0 {
 		response.PHUpML = deltaPH / (common.GetConfig().SystemConfig.PHUpPerVolSolution * getTankWaterVolume())
 	} else {
 		response.PHDownML = -deltaPH / (common.GetConfig().SystemConfig.PHDownPerVolSolution * getTankWaterVolume())
@@ -54,7 +66,11 @@ func handleGetECAdjustment(w http.ResponseWriter, r *http.Request) {
 
 	deltaEC := upperTarget - reading.ElectricalConductivity
 	response := AdjustmentResponse{
-		NutrientML: deltaEC / (common.GetConfig().SystemConfig.ECPerVolNutrient * getTankWaterVolume()),
+		NutrientML: 0,
+	}
+
+	if reading.WaterLevel != 0 {
+		response.NutrientML = deltaEC / (common.GetConfig().SystemConfig.ECPerVolNutrient * getTankWaterVolume())
 	}
 
 	json.NewEncoder(w).Encode(response)
@@ -89,4 +105,17 @@ func handleWaterAdjustment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(response)
+}
+
+func handleGetTargets(w http.ResponseWriter, r *http.Request) {
+	if !checkAuth(w, r) {
+		return
+	}
+
+	targets := TargetsResponse{}
+	targets.ECMin, targets.ECMax = common.GetTargetECRange()
+	targets.PHMin, targets.PHMax = common.GetTargetPHRange()
+	targets.LightMin, targets.LightMax = common.GetTargetLightHoursRange()
+
+	json.NewEncoder(w).Encode(targets)
 }

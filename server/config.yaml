@@ -1,2 +1,125 @@
 timezone_offset_mins: -300
-clickhouse_conn_string: "tcp://localhost:9000?debug=true"
+clickhouse_conn_string: "tcp://192.168.0.44:9000?password=hydrofarm&database=default"
+log_file_dir: "./logs" # todo: update this to be on the USB drive on the PI!
+log_retention_days: 30
+system_password: "Cooper'stasty16herbs"
+serial_file_path: "\\\\.\\COM9"
+system_configuration:
+  pump_on_time: 15
+  pump_on_count: 4
+  water_leak_amount: 150
+  light_degredation_threshold: 2000
+  light_on_threshold: 1000
+  minimum_water_level: 2
+  minimum_co2_ppm: 350
+  maximum_co2_ppm: 2000
+  minimum_air_temp: 65
+  maximum_air_temp: 90
+  minimum_air_humidity: 30
+  maximum_air_humidity: 70
+  ph_maximum_deviation: 10 # %
+  ec_maximum_deviation: 15 # %
+  light_maximum_deviation: 2
+  tank_usable_volume: 60
+  tank_total_volume: 80
+  light_wattage: 150
+  pump_wattage: 45
+  ec_per_vol_nutrient: 123
+  ph_up_per_vol_solution: 1.23
+  ph_down_per_vol_solution: 1.23
+  alerting_enabled: false
+  plant_configs:
+    -
+      plant_id: 1
+      name: Test Plant
+      ec_lower_limit: 2.6
+      ec_upper_limit: 3.4
+      ph_lower_limit: 6.2
+      ph_upper_limit: 7.1
+      light_hours_lower_limit: 12
+      light_hours_upper_limit: 16
+      transplant_to_harvest_days: 60
+      harvest_length_days: 34
+      color1: "0000FF"
+      color2: "00FF00"
+  plant_holders:
+    -
+      x_coordinate: 0
+      y_coordinate: 0
+      plant_id: 1
+      time_transplanted: 1701730986
+    - 
+      x_coordinate: 1
+      y_coordinate: 0
+      plant_id: -1
+      time_transplanted: 0
+    - 
+      x_coordinate: 2
+      y_coordinate: 0
+      plant_id: -1
+      time_transplanted: 0
+    - 
+      x_coordinate: 3
+      y_coordinate: 0
+      plant_id: -1
+      time_transplanted: 0
+    - 
+      x_coordinate: 0
+      y_coordinate: 1
+      plant_id: -1
+      time_transplanted: 0
+    - 
+      x_coordinate: 1
+      y_coordinate: 1
+      plant_id: -1
+      time_transplanted: 0
+    - 
+      x_coordinate: 2
+      y_coordinate: 1
+      plant_id: -1
+      time_transplanted: 0
+    - 
+      x_coordinate: 3
+      y_coordinate: 1
+      plant_id: -1
+      time_transplanted: 0
+    - 
+      x_coordinate: 0
+      y_coordinate: 2
+      plant_id: -1
+      time_transplanted: 0
+    - 
+      x_coordinate: 1
+      y_coordinate: 2
+      plant_id: -1
+      time_transplanted: 0
+    - 
+      x_coordinate: 2
+      y_coordinate: 2
+      plant_id: -1
+      time_transplanted: 0
+    - 
+      x_coordinate: 3
+      y_coordinate: 2
+      plant_id: -1
+      time_transplanted: 0
+    - 
+      x_coordinate: 0
+      y_coordinate: 3
+      plant_id: -1
+      time_transplanted: 0
+    - 
+      x_coordinate: 1
+      y_coordinate: 3
+      plant_id: -1
+      time_transplanted: 0
+    - 
+      x_coordinate: 2
+      y_coordinate: 3
+      plant_id: -1
+      time_transplanted: 0
+    - 
+      x_coordinate: 3
+      y_coordinate: 3
+      plant_id: -1
+      time_transplanted: 0
