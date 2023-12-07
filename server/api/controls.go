@@ -13,6 +13,9 @@ func handleTogglePump(w http.ResponseWriter, r *http.Request) {
 	}
 
 	readings := asynchronousactivities.GetLastSensorReadings()
+
+	common.LogF(common.SeverityInfo, "Manually toggling pump to %t", !readings.PumpOn)
+
 	err := asynchronousactivities.RequestPumpState(!readings.PumpOn)
 	if err != nil {
 		common.LogF(common.SeverityError, "Error requesting pump state: %v", err)
@@ -29,6 +32,9 @@ func handleToggleLight(w http.ResponseWriter, r *http.Request) {
 	}
 
 	readings := asynchronousactivities.GetLastSensorReadings()
+
+	common.LogF(common.SeverityInfo, "Manually toggling light to %t", !readings.LightOn)
+
 	err := asynchronousactivities.RequestLightState(!readings.LightOn)
 	if err != nil {
 		common.LogF(common.SeverityError, "Error requesting light state: %v", err)
