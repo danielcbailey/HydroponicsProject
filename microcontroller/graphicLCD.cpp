@@ -333,7 +333,7 @@ int64_t GraphicLCD::alarmCallback(alarm_id_t id, void* data)
 {
 	if (isDim)
 	{
-		turnOff();
+		//turnOff();
 		alarmId = -1;
 		return 0;
 	}
@@ -362,7 +362,7 @@ bool GraphicLCD::reportUserActivity()
 	bool ret = false;
 	if (!isOn)
 	{
-		turnOn();
+		//turnOn();
 		ret = true;
 	}
 	setBacklight(true);
