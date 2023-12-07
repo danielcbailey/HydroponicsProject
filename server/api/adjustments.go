@@ -45,9 +45,9 @@ func handleGetPHAdjustment(w http.ResponseWriter, r *http.Request) {
 		// instrumentation error, can't adjust pH
 		response.PHUpML = 0
 	} else if deltaPH > 0 {
-		response.PHUpML = deltaPH / (common.GetConfig().SystemConfig.PHUpPerVolSolution * getTankWaterVolume())
+		response.PHUpML = deltaPH * getTankWaterVolume() / common.GetConfig().SystemConfig.PHUpPerVolSolution
 	} else {
-		response.PHDownML = -deltaPH / (common.GetConfig().SystemConfig.PHDownPerVolSolution * getTankWaterVolume())
+		response.PHDownML = -deltaPH * getTankWaterVolume() / common.GetConfig().SystemConfig.PHDownPerVolSolution
 	}
 
 	json.NewEncoder(w).Encode(response)
@@ -64,13 +64,13 @@ func handleGetECAdjustment(w http.ResponseWriter, r *http.Request) {
 
 	reading := asynchronousactivities.GetLastSensorReadings()
 
-	deltaEC := upperTarget - reading.ElectricalConductivity
+	deltaEC := upperTarget*1000 - reading.ElectricalConductivity
 	response := AdjustmentResponse{
 		NutrientML: 0,
 	}
 
 	if reading.WaterLevel != 0 {
-		response.NutrientML = deltaEC / (common.GetConfig().SystemConfig.ECPerVolNutrient * getTankWaterVolume())
+		response.NutrientML = deltaEC * getTankWaterVolume() / (common.GetConfig().SystemConfig.ECPerVolNutrient * 1000)
 	}
 
 	json.NewEncoder(w).Encode(response)
@@ -93,15 +93,15 @@ func handleWaterAdjustment(w http.ResponseWriter, r *http.Request) {
 
 	_, upperTarget := common.GetTargetECRange()
 	deltaEC := upperTarget - ecEff
-	response.NutrientML = deltaEC / (common.GetConfig().SystemConfig.ECPerVolNutrient * getTankWaterVolume())
+	response.NutrientML = deltaEC * getTankWaterVolume() / (common.GetConfig().SystemConfig.ECPerVolNutrient * 1000)
 
 	lowerTarget, upperTarget := common.GetTargetPHRange()
 	deltaPH := (upperTarget+lowerTarget)/2 - phEff
 
 	if deltaPH > 0 {
-		response.PHUpML = deltaPH / (common.GetConfig().SystemConfig.PHUpPerVolSolution * getTankWaterVolume())
+		response.PHUpML = deltaPH * getTankWaterVolume() / common.GetConfig().SystemConfig.PHUpPerVolSolution
 	} else {
-		response.PHDownML = -deltaPH / (common.GetConfig().SystemConfig.PHDownPerVolSolution * getTankWaterVolume())
+		response.PHDownML = -deltaPH * getTankWaterVolume() / common.GetConfig().SystemConfig.PHDownPerVolSolution
 	}
 
 	json.NewEncoder(w).Encode(response)
