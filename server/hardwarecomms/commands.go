@@ -28,7 +28,7 @@ func (hc *HardwareComms) SetPumpState(on bool) error {
 }
 
 func (hc *HardwareComms) SetLightState(on bool) error {
-	_, err := hc.sendCommand("sensors/setlight", commandSetBooleanState{State: on})
+	_, err := hc.sendCommand("controls/setlight", commandSetBooleanState{State: on})
 	return err
 }
 
