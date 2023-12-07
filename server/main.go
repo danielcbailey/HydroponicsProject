@@ -30,6 +30,9 @@ func main() {
 
 	api.AddRoutes(http.DefaultServeMux)
 
+	fs := http.FileServer(http.Dir("./publicStatic"))
+	http.DefaultServeMux.Handle("/", fs)
+
 	err = http.ListenAndServe(":8088", http.DefaultServeMux)
 	if err != nil {
 		common.LogF(common.SeverityFatal, "Error starting web server: %v", err)
