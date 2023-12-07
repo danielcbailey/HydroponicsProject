@@ -3,6 +3,8 @@
 #include "hardware/gpio.h"
 #include "sensors.h"
 
+bool lightState;
+bool pumpState;
 
 void outputsInit() {
 	gpio_init(PUMP_CONTROL);
@@ -23,6 +25,7 @@ bool setLight(bool on)
 		//temperature should be lower than the max temperature set for the light to turn on 
 		// however it could be turned off at any time 
 		gpio_put(LIGHT_CONTROL, !on);
+		lightState = on;
 		return true;
 	}
 	else
@@ -38,6 +41,7 @@ bool setPump(bool on)
 		//water level should be higher than the min level if the user wants to turn it on
 		// however the pump can be turned off any time  
 		gpio_put(PUMP_CONTROL, !on);
+		pumpState = on;
 		return true;
 	}
 	else
