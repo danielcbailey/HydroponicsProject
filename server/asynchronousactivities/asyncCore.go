@@ -86,7 +86,14 @@ func RequestPumpState(on bool) error {
 		return errors.New("COMMUNICATION_FAILURE: Hardware communications not initialized")
 	}
 
-	return comm.SetPumpState(on)
+	err := comm.SetPumpState(on)
+	if err != nil {
+		return err
+	}
+
+	lastSensorReadings.PumpOn = on
+
+	return nil
 }
 
 func RequestLightState(on bool) error {
@@ -97,7 +104,14 @@ func RequestLightState(on bool) error {
 		return errors.New("COMMUNICATION_FAILURE: Hardware communications not initialized")
 	}
 
-	return comm.SetLightState(on)
+	err := comm.SetLightState(on)
+	if err != nil {
+		return err
+	}
+
+	lastSensorReadings.LightOn = on
+
+	return nil
 }
 
 func GetLastSensorReadings() common.SensorReadings {
