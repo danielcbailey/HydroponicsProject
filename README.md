@@ -1,4 +1,4 @@
-# HydroponicsProject
+# ECE 4180 Final Project: Hydrofarm
 
 Daniel Pierce Cooper
 
@@ -22,7 +22,7 @@ This project was to construct a semi-autonomous hydroponic farm for growing herb
 
 ## Highlights Video
 
-[![View on YouTube](https://img.youtube.com/vi/q4DIJgzh-Gc /0.jpg)](https://www.youtube.com/watch?v=q4DIJgzh-Gc )
+[<img src="https://img.youtube.com/vi/q4DIJgzh-Gc/0.jpg">)](https://www.youtube.com/watch?v=q4DIJgzh-Gc)
 
 ## System High-Level Diagram
 
