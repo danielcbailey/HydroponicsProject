@@ -26,13 +26,13 @@ This project was to construct a semi-autonomous hydroponic farm for growing herb
 
 ## System High-Level Diagram
 
-TODO: put the image.
+![image](https://github.com/danielcbailey/HydroponicsProject/assets/9934819/059ead7f-0ccd-4f65-831f-1820206b267e)
 
 A Raspberry Pi Pico is used for interfacing with the sensors, relays, and a small control panel for offline operation. A Raspberry Pi 4B is used as a server that hosts both the static website files, the backend server, and a Clickhouse database. These two computers communicate using USB Virtual Serial.
 
 ## System Schematic
 
-TODO: put the image.
+TODO SCHEMATIC
 
 Not shown is the Raspberry Pi 4B, which the Pico's USB is connected to. The Raspberry Pi 4B has a USB flash drive for storing the database content.
 
