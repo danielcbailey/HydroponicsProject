@@ -32,7 +32,7 @@ A Raspberry Pi Pico is used for interfacing with the sensors, relays, and a smal
 
 ## System Schematic
 
-![image](https://github.com/danielcbailey/HydroponicsProject/assets/32362546/a51a06e4-8014-4535-9cb7-e429a8f9740d)
+![image](https://github.com/danielcbailey/HydroponicsProject/assets/32362546/c5d28f76-5830-4154-a814-89db9429526c)
 
 Not shown is the Raspberry Pi 4B, which the Pico's USB is connected to. The Raspberry Pi 4B has a USB flash drive for storing the database content.
 
