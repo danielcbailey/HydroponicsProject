@@ -86,7 +86,7 @@ export class PlantConfigurationSettings extends React.Component {
                 />
                 <SettingsTextBox
                     value={this.props.plant.harvest_length_days}
-                    name={"Days Until Harvest"}
+                    name={"Harvest Length"}
                     description={"The number of days between the start of the harvest period and the end."}
                     unit={"days"}
                     onChange={(value) => {

@@ -39,9 +39,6 @@ Figure 5. Manual Control Menu
 
 This page displays all events from the latest schedule sent by the server. If the number of events exceeds the length of the LCD screen, user can rotate the knob to scroll through the schedule. However, it's important to note that the schedule cannot be modified from this page. Only the server has the capability to send a schedule to the Pico (refer to the server interaction document).
 
-TODO add pic to a schedule menu 
-Figure 6. Schedule Display Page 
-
 ## 4. pH Calibration
 
 The Atlas Scientific pH sensor requires a 3-point calibration process at the start of operations and periodically thereafter. The pH Calibration menu displays three selections corresponding to the three calibration solutions that come with the sensor (7.0 pH - mid, 4.0 pH - low, 10.0 pH - high). It is crucial that the user places the sensor in the solution before selecting its respective page on the pH calibration selection menu. For instance, when the user immerses the sensor in a 7.0 pH solution and selects the "1 - MID (7.0)" option, the system will sample the pH readings using a circular buffer. The mean and standard deviation of this circular buffer will then be calculated. Once these values stabilize, the Pico will send the calibration command to the pH sensor via UART.
@@ -50,13 +47,7 @@ Even if the sensor stabilizes at 6.956 pH, the calibration method ensures it rea
 The calibration processes are detailed in the datasheet, which can be found on this page:  https://atlas-scientific.com/kits/ph-kit/
 
 ![WhatsApp Image 2023-12-06 at 10 25 18 AM (4)](https://github.com/danielcbailey/HydroponicsProject/assets/32362546/67bc6370-cafb-4d6e-a549-5e1b39e9cc57)
-Figure 7. pH Calibration Selection Menu 
-
-TO DO 
-Figure 8. MID-POINT Calibration Page during the calibration 
-
-TO DO 
-Figure 9. MID-POINT Calibration Page after the calibration is successfully performed 
+Figure 6. pH Calibration Selection Menu 
 
 ## 5. EC Calibration
 
@@ -67,12 +58,4 @@ The EC Calibration menu displays these three selections corresponding to the cal
 The calibration processes are detailed in the datasheet, available on this page: https://atlas-scientific.com/kits/conductivity-k-1-0-kit/
 
 ![WhatsApp Image 2023-12-06 at 10 25 18 AM (5)](https://github.com/danielcbailey/HydroponicsProject/assets/32362546/c3ea2b3a-7e90-419d-be6f-6aaed722dde8)
-Figure 10. EC Calibration Selection Menu 
-
-TO DO 
-Figure 11. Dry Calibration Page during the calibration 
-
-TO DO 
-Figure 12. Dry Calibration Page after the calibration is successfully performed 
-
-
+Figure 7. EC Calibration Selection Menu 

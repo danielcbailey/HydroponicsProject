@@ -145,9 +145,9 @@ void sensorReader(cJSON* params, int reqID)
 
 void manualSetPump(cJSON* params, int reqID) 
 {	
-	bool state = cJSON_GetObjectItem(params, "state");
+	cJSON* state = cJSON_GetObjectItem(params, "state");
 	bool success;
-	if (state)
+	if (state->valueint)
 	{		
 		success = setPump(1);
 	}
@@ -168,9 +168,9 @@ void manualSetPump(cJSON* params, int reqID)
 
 void manualSetLight(cJSON* params, int reqID) 
 {	
-	bool state = cJSON_GetObjectItem(params, "state");
+	cJSON* state = cJSON_GetObjectItem(params, "state");
 	bool success;
-	if (state)
+	if (state->valueint)
 	{
 		success = setLight(1);
 	}
