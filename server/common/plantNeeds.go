@@ -127,6 +127,16 @@ func GetSchedule() (ret Schedule) {
 		EventTime: convertMinutesToHoursMins(int(lightOn * 60)),
 	})
 
+	// checking that the time isn't already allocated to pump actions
+	for _, evt := range ret.Schedule {
+		proposedTime := convertMinutesToHoursMins(int(lightOff * 60))
+		if evt.EventTime > proposedTime {
+			break
+		} else if evt.EventTime == proposedTime {
+			lightOff += 1 / 60
+		}
+	}
+
 	ret.Schedule = append(ret.Schedule, ScheduleEntry{
 		EventType: "LIGHT_OFF",
 		EventTime: convertMinutesToHoursMins(int(lightOff * 60)),

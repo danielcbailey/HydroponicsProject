@@ -28,6 +28,7 @@ func RunAsyncActivities(comms *hardwarecomms.HardwareComms) {
 
 	var err error
 	i := 0
+	j := 0
 	for {
 		commMutex.Lock()
 		lastSensorReadings, err = comm.GetSensors()
@@ -56,6 +57,13 @@ func RunAsyncActivities(comms *hardwarecomms.HardwareComms) {
 			err = comm.SetTime(time.Now())
 			commMutex.Unlock()
 			i = 0
+		}
+		j++
+		if j == 60*24 {
+			commMutex.Lock()
+			comm.SetSchedule(common.GetSchedule())
+			commMutex.Unlock()
+			j = 0
 		}
 
 		time.Sleep(1 * time.Minute)
